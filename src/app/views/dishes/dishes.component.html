@@ -1,0 +1,431 @@
+<div class="p-3">
+  <h2 class="mb-3 text-xl font-semibold text-gray-900 dark:text-white">Platos y recetas</h2>
+
+  <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div class="p-6">
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-end gap-3">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="dishSearch">Buscar</label>
+            <input
+              id="dishSearch"
+              type="text"
+              class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              [ngModel]="search()"
+              (ngModelChange)="onSearchChange($event)"
+              name="dishSearch"
+              placeholder="Nombre del plato"
+            />
+          </div>
+          @if (isSysadmin) {
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="tenantFilter">Tenant</label>
+              <select
+                id="tenantFilter"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [ngModel]="selectedTenantId()"
+                (ngModelChange)="onTenantChange($event)"
+                name="tenantFilter"
+              >
+                <option value="">Todos los tenants</option>
+                @for (tenant of tenants(); track tenant._id) {
+                  <option [value]="tenant._id">{{ tenant.name }}</option>
+                }
+              </select>
+            </div>
+          }
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="dishBranchFilter">Sucursal</label>
+            <select
+              id="dishBranchFilter"
+              class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              [ngModel]="selectedBranchId()"
+              (ngModelChange)="onBranchChange($event)"
+              name="dishBranchFilter"
+            >
+              <option value="">Todas (precio default)</option>
+              @for (branch of branches(); track branch._id) {
+                <option [value]="branch._id">{{ branch.name }}</option>
+              }
+            </select>
+          </div>
+          <span class="pb-2 text-sm text-gray-500 dark:text-slate-400">{{ dishes().length }} plato(s)</span>
+        </div>
+        <button
+          class="self-end rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+          (click)="startCreate()"
+        >
+          Nuevo plato
+        </button>
+      </div>
+
+      @if (error()) {
+        <div class="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300" role="alert">
+          {{ error() }}
+        </div>
+      }
+
+      @if (editing) {
+        <form class="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/50" (ngSubmit)="saveEdit()">
+          <h6 class="mb-3 font-semibold text-gray-900 dark:text-white">Editar plato</h6>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editDishName">Nombre</label>
+              <input
+                id="editDishName"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="editing.name"
+                name="editDishName"
+                required
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editDishPrice">Precio de venta</label>
+              <input
+                id="editDishPrice"
+                type="number"
+                min="0"
+                step="10"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="editing.salePrice"
+                name="editDishPrice"
+                required
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editDishCategory">Categoría</label>
+              <input
+                id="editDishCategory"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="editing.category"
+                name="editDishCategory"
+                placeholder="Ej: Hamburguesas"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editDishIcon">Icono</label>
+              <input
+                id="editDishIcon"
+                type="text"
+                maxlength="8"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="editing.icon"
+                name="editDishIcon"
+                placeholder="🍔"
+              />
+            </div>
+          </div>
+          <div class="mt-3">
+            <h6 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Precios por sucursal</h6>
+            <p class="mb-2 text-xs text-gray-500 dark:text-slate-400">
+              Deja vacío para usar el precio default en esa sucursal.
+            </p>
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+              @for (branch of branches(); track branch._id) {
+                <div>
+                  <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-slate-300" [for]="'editBranchPrice' + branch._id">{{ branch.name }}</label>
+                  <input
+                    [id]="'editBranchPrice' + branch._id"
+                    type="number"
+                    min="0"
+                    step="10"
+                    class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                    [ngModel]="branchPriceOf(editing, branch._id) ?? ''"
+                    (ngModelChange)="setBranchPrice(editing, branch._id, $event)"
+                    [ngModelOptions]="{ standalone: true }"
+                    [name]="'editBranchPrice' + branch._id"
+                    placeholder="Precio default"
+                  />
+                </div>
+              }
+            </div>
+          </div>
+          <div class="mt-3">
+            <h6 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Receta</h6>
+            @for (line of editing.recipe; track $index) {
+              <div class="mb-2 flex flex-wrap items-center gap-2">
+                <select
+                  class="block w-56 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                  [(ngModel)]="line.ingredientId"
+                  [name]="'editLineIngredient' + $index"
+                  required
+                >
+                  <option value="" disabled>Selecciona un ingrediente</option>
+                  @for (ingredient of ingredients(); track ingredient._id) {
+                    <option [value]="ingredient._id">{{ ingredient.name }} ({{ ingredient.unit }})</option>
+                  }
+                </select>
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  class="block w-28 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                  [(ngModel)]="line.quantity"
+                  [name]="'editLineQuantity' + $index"
+                  placeholder="Cantidad"
+                  required
+                />
+                <span class="text-sm text-gray-500 dark:text-slate-400">{{ ingredientUnit(line.ingredientId) }}</span>
+                <button
+                  type="button"
+                  class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                  (click)="removeRecipeLine(editing, $index)"
+                >
+                  Quitar
+                </button>
+              </div>
+            }
+            <button
+              type="button"
+              class="mt-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+              (click)="addRecipeLine(editing)"
+            >
+              + Agregar ingrediente
+            </button>
+          </div>
+          <div class="mt-3 flex gap-2">
+            <button
+              type="submit"
+              class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+              [disabled]="saving()"
+            >
+              {{ saving() ? 'Guardando...' : 'Guardar' }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              (click)="cancelEdit()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      }
+
+      @if (creating()) {
+        <form class="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/50" (ngSubmit)="saveCreate()">
+          <h6 class="mb-3 font-semibold text-gray-900 dark:text-white">Nuevo plato</h6>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            @if (isSysadmin) {
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newDishTenant">Tenant</label>
+                <select
+                  id="newDishTenant"
+                  class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                  [(ngModel)]="newDish.tenantId"
+                  name="newDishTenant"
+                  required
+                >
+                  <option value="" disabled>Selecciona un tenant</option>
+                  @for (tenant of tenants(); track tenant._id) {
+                    <option [value]="tenant._id">{{ tenant.name }}</option>
+                  }
+                </select>
+              </div>
+            }
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newDishName">Nombre</label>
+              <input
+                id="newDishName"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="newDish.name"
+                name="newDishName"
+                placeholder="Ej: Hotdog Clásico"
+                required
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newDishPrice">Precio de venta</label>
+              <input
+                id="newDishPrice"
+                type="number"
+                min="0"
+                step="10"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="newDish.salePrice"
+                name="newDishPrice"
+                required
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newDishCategory">Categoría</label>
+              <input
+                id="newDishCategory"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="newDish.category"
+                name="newDishCategory"
+                placeholder="Ej: Hamburguesas"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newDishIcon">Icono</label>
+              <input
+                id="newDishIcon"
+                type="text"
+                maxlength="8"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="newDish.icon"
+                name="newDishIcon"
+                placeholder="🍔"
+              />
+            </div>
+          </div>
+          <div class="mt-3">
+            <h6 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Precios por sucursal</h6>
+            <p class="mb-2 text-xs text-gray-500 dark:text-slate-400">
+              Deja vacío para usar el precio default en esa sucursal.
+            </p>
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+              @for (branch of branches(); track branch._id) {
+                <div>
+                  <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-slate-300" [for]="'newBranchPrice' + branch._id">{{ branch.name }}</label>
+                  <input
+                    [id]="'newBranchPrice' + branch._id"
+                    type="number"
+                    min="0"
+                    step="10"
+                    class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                    [ngModel]="branchPriceOf(newDish, branch._id) ?? ''"
+                    (ngModelChange)="setBranchPrice(newDish, branch._id, $event)"
+                    [ngModelOptions]="{ standalone: true }"
+                    [name]="'newBranchPrice' + branch._id"
+                    placeholder="Precio default"
+                  />
+                </div>
+              }
+            </div>
+          </div>
+          <div class="mt-3">
+            <h6 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Receta</h6>
+            @for (line of newDish.recipe; track $index) {
+              <div class="mb-2 flex flex-wrap items-center gap-2">
+                <select
+                  class="block w-56 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                  [(ngModel)]="line.ingredientId"
+                  [name]="'newLineIngredient' + $index"
+                  required
+                >
+                  <option value="" disabled>Selecciona un ingrediente</option>
+                  @for (ingredient of ingredients(); track ingredient._id) {
+                    <option [value]="ingredient._id">{{ ingredient.name }} ({{ ingredient.unit }})</option>
+                  }
+                </select>
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  class="block w-28 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                  [(ngModel)]="line.quantity"
+                  [name]="'newLineQuantity' + $index"
+                  placeholder="Cantidad"
+                  required
+                />
+                <span class="text-sm text-gray-500 dark:text-slate-400">{{ ingredientUnit(line.ingredientId) }}</span>
+                <button
+                  type="button"
+                  class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                  (click)="removeRecipeLine(newDish, $index)"
+                >
+                  Quitar
+                </button>
+              </div>
+            }
+            <button
+              type="button"
+              class="mt-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+              (click)="addRecipeLine(newDish)"
+            >
+              + Agregar ingrediente
+            </button>
+          </div>
+          <div class="mt-3 flex gap-2">
+            <button
+              type="submit"
+              class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+              [disabled]="saving()"
+            >
+              {{ saving() ? 'Creando...' : 'Crear' }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              (click)="cancelCreate()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      }
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        @for (dish of dishes(); track dish._id) {
+          <div class="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div class="flex items-center justify-between gap-2 border-b border-gray-100 p-4 dark:border-slate-800">
+              <div class="min-w-0">
+                <h3 class="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                  @if (dish.icon) {
+                    <span class="mr-1">{{ dish.icon }}</span>
+                  }
+                  {{ dish.name }}
+                </h3>
+                <span class="text-xs text-gray-500 dark:text-slate-400">{{ tenantName(dish.tenantId) }}</span>
+              </div>
+              @if (dish.active) {
+                <span class="inline-flex shrink-0 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200">Activo</span>
+              }
+            </div>
+            <div class="flex-1 space-y-1 p-4 text-sm">
+              @if (dish.category) {
+                <div class="flex justify-between">
+                  <span class="text-gray-500 dark:text-slate-400">Categoría</span>
+                  <span class="font-medium text-gray-900 dark:text-white">{{ dish.category }}</span>
+                </div>
+              }
+              <div class="flex justify-between">
+                <span class="text-gray-500 dark:text-slate-400">Precio</span>
+                <span class="font-medium text-gray-900 dark:text-white">$ {{ dish.salePrice.toLocaleString('es-CL') }}</span>
+              </div>
+              @if (selectedBranchId() && branchPriceOf(dish, selectedBranchId()) !== null) {
+                <div class="flex justify-between">
+                  <span class="text-gray-500 dark:text-slate-400">Precio en esta sucursal</span>
+                  <span class="font-medium text-blue-600 dark:text-blue-400">$ {{ branchPriceOf(dish, selectedBranchId())!.toLocaleString('es-CL') }}</span>
+                </div>
+              }
+              <div class="flex justify-between">
+                <span class="text-gray-500 dark:text-slate-400">Costo receta (FIFO)</span>
+                <span class="font-medium text-gray-900 dark:text-white">{{ formatCost(dish.cost) }}</span>
+              </div>
+              @if (dish.cost !== undefined && dish.cost !== null) {
+                <div class="flex justify-between">
+                  <span class="text-gray-500 dark:text-slate-400">Margen</span>
+                  <span class="font-medium text-emerald-600 dark:text-emerald-400">{{ marginPercent(dish) }}%</span>
+                </div>
+              }
+              <ul class="mt-2 space-y-0.5 border-t border-gray-100 pt-2 text-xs text-gray-600 dark:border-slate-800 dark:text-slate-400">
+                @for (line of dish.recipe; track $index) {
+                  <li>{{ ingredientName(line.ingredientId) }}: {{ line.quantity }} {{ line.unit }}</li>
+                }
+              </ul>
+            </div>
+            <div class="border-t border-gray-100 p-3 dark:border-slate-800">
+              <button
+                class="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                (click)="startEdit(dish)"
+              >
+                Editar receta
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <div class="col-span-full rounded-lg border border-dashed border-gray-300 px-4 py-4 text-center text-gray-500 dark:border-slate-700 dark:text-slate-400">
+            {{ loading() ? 'Cargando...' : 'No hay platos.' }}
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

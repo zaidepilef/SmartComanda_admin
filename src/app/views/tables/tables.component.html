@@ -1,0 +1,29 @@
+<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+  <div class="border-b border-gray-200 px-6 py-4 dark:border-slate-800">
+    <h5 class="mb-0 text-base font-semibold text-gray-900 dark:text-white">Productos</h5>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+        <tr>
+          <th scope="col" class="px-6 py-3 font-semibold">#</th>
+          <th scope="col" class="px-6 py-3 font-semibold">Producto</th>
+          <th scope="col" class="px-6 py-3 font-semibold">Categoría</th>
+          <th scope="col" class="px-6 py-3 font-semibold">Precio</th>
+          <th scope="col" class="px-6 py-3 font-semibold">Stock</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
+        @for (product of products; track product.name; let i = $index) {
+          <tr class="transition-colors hover:bg-gray-50 dark:hover:bg-slate-800/50">
+            <th scope="row" class="px-6 py-3 font-medium text-gray-900 dark:text-white">{{ i + 1 }}</th>
+            <td class="px-6 py-3 text-gray-700 dark:text-slate-300">{{ product.name }}</td>
+            <td class="px-6 py-3 text-gray-700 dark:text-slate-300">{{ product.category }}</td>
+            <td class="px-6 py-3 text-gray-700 dark:text-slate-300">{{ product.price }}</td>
+            <td class="px-6 py-3 text-gray-700 dark:text-slate-300">{{ product.stock }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,50 @@
+<div class="min-h-screen bg-gray-100 dark:bg-slate-950">
+  <!-- Backdrop for mobile -->
+  @if (sidebarOpen()) {
+    <div
+      class="fixed inset-0 z-30 bg-black/50 lg:hidden"
+      (click)="closeSidebar()"
+    ></div>
+  }
+
+  <!-- Sidebar -->
+  <aside
+    class="fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-700 bg-slate-900 text-slate-100 transition-transform duration-200 lg:translate-x-0"
+    [class.-translate-x-full]="!sidebarOpen()"
+    aria-label="Sidebar"
+  >
+    <div class="flex h-16 items-center border-b border-slate-700 px-4">
+      <span class="text-lg font-semibold">SmartComanda</span>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto px-3 py-4">
+      <ul class="space-y-1">
+        @for (item of navItems(); track item.url) {
+          <li>
+            <a
+              routerLink="{{ item.url }}"
+              routerLinkActive="bg-slate-800 text-white"
+              class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+              (click)="closeSidebar()"
+            >
+              <app-icon [name]="item.icon" class="h-5 w-5 shrink-0" />
+              {{ item.name }}
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+  </aside>
+
+  <!-- Main -->
+  <div class="flex min-h-screen flex-col lg:pl-64">
+    <app-default-header [sidebarOpen]="sidebarOpen()" (toggleSidebar)="sidebarOpen.set(!sidebarOpen())" />
+    <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-7xl">
+        <router-outlet />
+      </div>
+    </main>
+    <app-default-footer />
+  </div>
+</div>

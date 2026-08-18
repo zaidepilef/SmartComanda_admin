@@ -1,0 +1,349 @@
+<div class="p-3">
+  <h2 class="mb-3 text-xl font-semibold text-gray-900 dark:text-white">Usuarios</h2>
+
+  <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div class="p-6">
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="statusFilter">Estado</label>
+          <select
+            id="statusFilter"
+            class="block w-auto rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            [(ngModel)]="statusFilter"
+            (ngModelChange)="applyFilter()"
+          >
+            <option value="pending">Pendientes</option>
+            <option value="active">Activos</option>
+            <option value="inactive">Inactivos</option>
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <span class="text-sm text-gray-500 dark:text-slate-400">{{ total() }} usuario(s)</span>
+        <button
+          class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+          (click)="startCreate()"
+        >
+          Nuevo usuario
+        </button>
+      </div>
+
+      @if (error()) {
+        <div class="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300" role="alert">
+          {{ error() }}
+        </div>
+      }
+
+      @if (editing) {
+        <form class="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/50" (ngSubmit)="saveEdit()">
+          <h6 class="mb-3 font-semibold text-gray-900 dark:text-white">Editar usuario</h6>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editFirstName">Nombre</label>
+              <input
+                id="editFirstName"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="editing.firstName"
+                name="editFirstName"
+                required
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editLastName">Apellido</label>
+              <input
+                id="editLastName"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="editing.lastName"
+                name="editLastName"
+                required
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editEmail">Email</label>
+              <input
+                id="editEmail"
+                type="email"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="editing.email"
+                name="editEmail"
+                required
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editStatus">Estado</label>
+              <select
+                id="editStatus"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                [(ngModel)]="editing.status"
+                name="editStatus"
+              >
+                <option value="pending">Pendiente</option>
+                <option value="active">Activo</option>
+                <option value="inactive">Inactivo</option>
+              </select>
+            </div>
+            @if (editing.role !== 'sysadmin') {
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editRole">Rol</label>
+                <select
+                  id="editRole"
+                  class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                  [(ngModel)]="editing.role"
+                  name="editRole"
+                >
+                  @for (role of creatableRoles; track role) {
+                    <option [value]="role">{{ roleLabel(role) }}</option>
+                  }
+                </select>
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editTenant">Tenant</label>
+                <select
+                  id="editTenant"
+                  class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                  [(ngModel)]="editing.tenantId"
+                  name="editTenant"
+                  (ngModelChange)="onEditTenantChange()"
+                >
+                  <option value="">Sin tenant</option>
+                  @for (tenant of tenants; track tenant._id) {
+                    <option [value]="tenant._id">{{ tenant.name }}</option>
+                  }
+                </select>
+              </div>
+              @if (editing.role === 'cashier') {
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editBranch">Sucursal</label>
+                  <select
+                    id="editBranch"
+                    class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                    [(ngModel)]="editing.branchId"
+                    name="editBranch"
+                  >
+                    <option value="">Sin sucursal</option>
+                    @for (branch of branches; track branch._id) {
+                      <option [value]="branch._id">{{ branch.name }}</option>
+                    }
+                  </select>
+                </div>
+              }
+            }
+          </div>
+          <div class="mt-3 flex gap-2">
+            <button
+              type="submit"
+              class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+              [disabled]="saving()"
+            >
+              {{ saving() ? 'Guardando...' : 'Guardar' }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              (click)="cancelEdit()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      }
+
+      @if (creating()) {
+        <form class="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/50" (ngSubmit)="saveCreate()">
+          <h6 class="mb-3 font-semibold text-gray-900 dark:text-white">Nuevo usuario</h6>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newFirstName">Nombre</label>
+              <input
+                id="newFirstName"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="newUser.firstName"
+                name="newFirstName"
+                required
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newLastName">Apellido</label>
+              <input
+                id="newLastName"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="newUser.lastName"
+                name="newLastName"
+                required
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newEmail">Email</label>
+              <input
+                id="newEmail"
+                type="email"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="newUser.email"
+                name="newEmail"
+                required
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newPassword">Contraseña</label>
+              <input
+                id="newPassword"
+                type="password"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="newUser.password"
+                name="newPassword"
+                required
+                minlength="8"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newStatus">Estado</label>
+              <select
+                id="newStatus"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                [(ngModel)]="newUser.status"
+                name="newStatus"
+              >
+                <option value="active">Activo</option>
+                <option value="pending">Pendiente</option>
+                <option value="inactive">Inactivo</option>
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newRole">Rol</label>
+              <select
+                id="newRole"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                [(ngModel)]="newUser.role"
+                name="newRole"
+                required
+              >
+                @for (role of creatableRoles; track role) {
+                  <option [value]="role">{{ roleLabel(role) }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newTenant">Tenant</label>
+              <select
+                id="newTenant"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                [(ngModel)]="newUser.tenantId"
+                name="newTenant"
+                (ngModelChange)="onNewTenantChange()"
+              >
+                <option value="">Sin tenant</option>
+                @for (tenant of tenants; track tenant._id) {
+                  <option [value]="tenant._id">{{ tenant.name }}</option>
+                }
+              </select>
+            </div>
+            @if (newUser.role === 'cashier') {
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newBranch">Sucursal</label>
+                <select
+                  id="newBranch"
+                  class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                  [(ngModel)]="newUser.branchId"
+                  name="newBranch"
+                >
+                  <option value="">Sin sucursal</option>
+                  @for (branch of branches; track branch._id) {
+                    <option [value]="branch._id">{{ branch.name }}</option>
+                  }
+                </select>
+              </div>
+            }
+          </div>
+          <div class="mt-3 flex gap-2">
+            <button
+              type="submit"
+              class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+              [disabled]="saving()"
+            >
+              {{ saving() ? 'Guardando...' : 'Crear' }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              (click)="cancelCreate()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      }
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+            <tr>
+              <th class="px-4 py-3 font-semibold">Nombre</th>
+              <th class="px-4 py-3 font-semibold">Email</th>
+              <th class="px-4 py-3 font-semibold">Rol</th>
+              <th class="px-4 py-3 font-semibold">Estado</th>
+              <th class="px-4 py-3 text-right font-semibold">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
+            @for (user of users(); track user._id) {
+              <tr class="transition-colors hover:bg-gray-50 dark:hover:bg-slate-800/50">
+                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ user.firstName }} {{ user.lastName }}</td>
+                <td class="px-4 py-3 text-gray-700 dark:text-slate-300">{{ user.email }}</td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex rounded-full px-3 py-1 text-xs font-medium {{ roleBadge(user.role) }}">{{ roleLabel(user.role) }}</span>
+                </td>
+                <td class="px-4 py-3"><span class="inline-flex rounded-full px-3 py-1 text-xs font-medium {{ badge(user.status) }}">{{ label(user.status) }}</span></td>
+                <td class="px-4 py-3 text-right">
+                  @if (user.status === 'pending') {
+                    <button class="me-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-700" (click)="approve(user)">
+                      Aprobar
+                    </button>
+                    <button class="me-1 rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950" (click)="reject(user)">
+                      Rechazar
+                    </button>
+                  } @else {
+                    <button class="me-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800" (click)="startEdit(user)">
+                      Editar
+                    </button>
+                    @if (user.status === 'inactive') {
+                      <button class="rounded-lg border border-emerald-300 px-3 py-1.5 text-xs font-medium text-emerald-600 transition-colors hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950" (click)="approve(user)">
+                        Reactivar
+                      </button>
+                    }
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="px-4 py-4 text-center text-gray-500 dark:text-slate-400">
+                  {{ loading() ? 'Cargando...' : 'No hay usuarios para este filtro.' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="mt-4 flex items-center justify-center gap-2" aria-label="Paginación de usuarios">
+        <button
+          class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          (click)="previousPage()"
+          [disabled]="page <= 1"
+        >
+          Anterior
+        </button>
+        <span class="px-2 text-sm text-gray-600 dark:text-slate-400">Página {{ page }} de {{ totalPages() }}</span>
+        <button
+          class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          (click)="nextPage()"
+          [disabled]="page >= totalPages()"
+        >
+          Siguiente
+        </button>
+      </nav>
+    </div>
+  </div>
+</div>

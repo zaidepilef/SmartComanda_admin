@@ -1,0 +1,169 @@
+<div class="p-3">
+  <h2 class="mb-3 text-xl font-semibold text-gray-900 dark:text-white">Nuevo pedido</h2>
+
+  @if (error()) {
+    <div class="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300" role="alert">
+      {{ error() }}
+    </div>
+  }
+
+  @if (success()) {
+    <div class="mb-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" role="alert">
+      {{ success() }}
+    </div>
+  }
+
+  @if (lastWarnings().length > 0) {
+    <div class="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-300" role="alert">
+      <p class="font-medium">Stock insuficiente en algunos platos — se vendieron sin descontar stock:</p>
+      <ul class="mt-1 list-inside list-disc">
+        @for (warning of lastWarnings(); track $index) {
+          <li>
+            {{ warning.dishName }}: falta
+            @for (missing of warning.missing; track $index) {
+              {{ missing.ingredientName }} ({{ missing.needed }} disponible {{ missing.available }}){{ $last ? '' : ', ' }}
+            }
+          </li>
+        }
+      </ul>
+    </div>
+  }
+
+  <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
+    <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div class="p-6">
+        <h3 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Platos disponibles</h3>
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          @for (dish of dishes(); track dish._id) {
+            @if (dish.active) {
+              <button
+                type="button"
+                class="rounded-lg border border-gray-200 bg-white p-3 text-left transition-colors hover:border-blue-500 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-500 dark:hover:bg-blue-950/30"
+                (click)="addDish(dish)"
+              >
+                <span class="block text-sm font-semibold text-gray-900 dark:text-white">{{ dish.name }}</span>
+                <span class="mt-1 block text-xs text-gray-500 dark:text-slate-400">$ {{ dish.salePrice.toLocaleString('es-CL') }}</span>
+              </button>
+            }
+          } @empty {
+            <p class="col-span-full text-sm text-gray-500 dark:text-slate-400">No hay platos configurados.</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:col-span-2">
+      <div class="p-6">
+        <h3 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Cuenta</h3>
+
+        <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="checkoutBranch">Sucursal</label>
+            <select
+              id="checkoutBranch"
+              class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              [(ngModel)]="selectedBranchId"
+              name="checkoutBranch"
+              required
+            >
+              <option value="" disabled>Selecciona la sucursal</option>
+              @for (branch of branches(); track branch._id) {
+                <option [value]="branch._id">{{ branch.name }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="checkoutContact">Contacto del cliente (opcional)</label>
+            <input
+              id="checkoutContact"
+              type="text"
+              class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              [(ngModel)]="clientContact"
+              name="checkoutContact"
+              placeholder="Nombre o teléfono"
+            />
+          </div>
+        </div>
+
+        @if (lines().length === 0) {
+          <div class="rounded-lg border border-dashed border-gray-300 px-4 py-6 text-center text-gray-500 dark:border-slate-700 dark:text-slate-400">
+            La cuenta está vacía. Agrega platos desde la izquierda.
+          </div>
+        }
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead>
+              <tr class="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500 dark:border-slate-700 dark:text-slate-400">
+                <th class="px-3 py-2">Plato</th>
+                <th class="px-3 py-2">Precio</th>
+                <th class="px-3 py-2">Cantidad</th>
+                <th class="px-3 py-2">Subtotal</th>
+                <th class="px-3 py-2">Descontar stock</th>
+                <th class="px-3 py-2 text-right"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of lines(); track $index) {
+                <tr class="border-b border-gray-100 dark:border-slate-800">
+                  <td class="px-3 py-2 font-medium text-gray-900 dark:text-white">{{ line.dishName }}</td>
+                  <td class="px-3 py-2 text-gray-600 dark:text-slate-400">$ {{ line.price.toLocaleString('es-CL') }}</td>
+                  <td class="px-3 py-2">
+                    <input
+                      type="number"
+                      min="1"
+                      class="block w-20 rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                      [(ngModel)]="line.quantity"
+                      [name]="'lineQuantity' + $index"
+                    />
+                  </td>
+                  <td class="px-3 py-2 font-medium text-gray-900 dark:text-white">$ {{ lineTotal(line).toLocaleString('es-CL') }}</td>
+                  <td class="px-3 py-2">
+                    <label class="inline-flex cursor-pointer items-center gap-2">
+                      <input
+                        type="checkbox"
+                        role="switch"
+                        class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
+                        [(ngModel)]="line.stockApplied"
+                        [name]="'lineStock' + $index"
+                      />
+                      <span class="text-xs text-gray-500 dark:text-slate-400">descontar</span>
+                    </label>
+                  </td>
+                  <td class="px-3 py-2 text-right">
+                    <button
+                      type="button"
+                      class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                      (click)="removeLine($index)"
+                    >
+                      Quitar
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+            @if (lines().length > 0) {
+              <tfoot>
+                <tr>
+                  <td colspan="3" class="px-3 py-2 text-right text-sm font-semibold text-gray-900 dark:text-white">Total</td>
+                  <td colspan="3" class="px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white">$ {{ orderTotal().toLocaleString('es-CL') }}</td>
+                </tr>
+              </tfoot>
+            }
+          </table>
+        </div>
+
+        <div class="mt-4 flex justify-end">
+          <button
+            type="button"
+            class="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+            [disabled]="saving()"
+            (click)="submitOrder()"
+          >
+            {{ saving() ? 'Creando pedido...' : 'Crear pedido' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

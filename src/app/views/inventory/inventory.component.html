@@ -1,0 +1,259 @@
+<div class="p-3">
+  <h2 class="mb-3 text-xl font-semibold text-gray-900 dark:text-white">Inventario</h2>
+
+  @if (error()) {
+    <div class="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300" role="alert">
+      {{ error() }}
+    </div>
+  }
+
+  @if (success()) {
+    <div class="mb-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" role="alert">
+      {{ success() }}
+    </div>
+  }
+
+  <div class="mb-3 rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div class="p-6">
+      <div class="mb-3 flex flex-wrap items-end gap-3">
+        @if (isSysadmin) {
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="invTenantFilter">Tenant</label>
+            <select
+              id="invTenantFilter"
+              class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              [ngModel]="selectedTenantId()"
+              (ngModelChange)="onTenantChange($event)"
+              name="invTenantFilter"
+            >
+              <option value="">Selecciona un tenant</option>
+              @for (tenant of tenants(); track tenant._id) {
+                <option [value]="tenant._id">{{ tenant.name }}</option>
+              }
+            </select>
+          </div>
+        }
+        <div>
+          <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="invBranchFilter">Sucursal</label>
+          <select
+            id="invBranchFilter"
+            class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+            [ngModel]="selectedBranchId()"
+            (ngModelChange)="onBranchChange($event)"
+            name="invBranchFilter"
+          >
+            <option value="">Todas las sucursales</option>
+            @for (branch of branches(); track branch._id) {
+              <option [value]="branch._id">{{ branch.name }}</option>
+            }
+          </select>
+        </div>
+        <button
+          class="self-end rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+          (click)="startAdjustment()"
+        >
+          Ajustar stock
+        </button>
+      </div>
+
+      @if (showAdjustment()) {
+        <form class="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/50" (ngSubmit)="saveAdjustment()">
+          <h6 class="mb-3 font-semibold text-gray-900 dark:text-white">Ajustar stock</h6>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-5">
+            @if (isSysadmin) {
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="adjTenant">Tenant</label>
+                <select
+                  id="adjTenant"
+                  class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                  [(ngModel)]="adjustment.tenantId"
+                  name="adjTenant"
+                  required
+                >
+                  <option value="" disabled>Selecciona un tenant</option>
+                  @for (tenant of tenants(); track tenant._id) {
+                    <option [value]="tenant._id">{{ tenant.name }}</option>
+                  }
+                </select>
+              </div>
+            }
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="adjIngredient">Ingrediente</label>
+              <select
+                id="adjIngredient"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="adjustment.ingredientId"
+                name="adjIngredient"
+                required
+              >
+                <option value="" disabled>Selecciona un ingrediente</option>
+                @for (ingredient of ingredients(); track ingredient._id) {
+                  <option [value]="ingredient._id">{{ ingredient.name }} ({{ ingredient.unit }})</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="adjBranch">Sucursal (bodega)</label>
+              <select
+                id="adjBranch"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="adjustment.branchId"
+                name="adjBranch"
+                required
+              >
+                <option value="" disabled>Selecciona una sucursal</option>
+                @for (branch of branches(); track branch._id) {
+                  <option [value]="branch._id">{{ branch.name }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="adjType">Tipo</label>
+              <select
+                id="adjType"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="adjustment.type"
+                name="adjType"
+              >
+                <option value="entry">Entrada (compra)</option>
+                <option value="exit">Salida (merma)</option>
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="adjQuantity">Cantidad</label>
+              <input
+                id="adjQuantity"
+                type="number"
+                min="0.01"
+                step="0.01"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="adjustment.quantity"
+                name="adjQuantity"
+                required
+              />
+            </div>
+            @if (adjustment.type === 'entry') {
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="adjUnitCost">Costo unitario (puesto en bodega)</label>
+                <input
+                  id="adjUnitCost"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                  [(ngModel)]="adjustment.unitCost"
+                  name="adjUnitCost"
+                  placeholder="Ej: 303 (incluye flete)"
+                  required
+                />
+              </div>
+            }
+            <div class="sm:col-span-2 md:col-span-5">
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="adjReason">Motivo</label>
+              <input
+                id="adjReason"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="adjustment.reason"
+                name="adjReason"
+                placeholder="Ej: Compra semanal, tomate podrido..."
+                required
+              />
+            </div>
+          </div>
+          <div class="mt-3 flex gap-2">
+            <button
+              type="submit"
+              class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+              [disabled]="saving()"
+            >
+              {{ saving() ? 'Guardando...' : 'Registrar ajuste' }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              (click)="cancelAdjustment()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      }
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500 dark:border-slate-700 dark:text-slate-400">
+              <th class="px-3 py-2">Ingrediente</th>
+              <th class="px-3 py-2">Unidad</th>
+              <th class="px-3 py-2">Bodega</th>
+              <th class="px-3 py-2 text-right">Cantidad</th>
+              <th class="px-3 py-2 text-right">Costo unit. promedio</th>
+              <th class="px-3 py-2 text-right">Valorización</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of stock(); track item.branchId + ':' + item.ingredientId) {
+              <tr class="border-b border-gray-100 dark:border-slate-800">
+                <td class="px-3 py-2 font-medium text-gray-900 dark:text-white">{{ item.ingredient?.name ?? '—' }}</td>
+                <td class="px-3 py-2 text-gray-600 dark:text-slate-400">{{ item.ingredient?.unit ?? '—' }}</td>
+                <td class="px-3 py-2 text-gray-600 dark:text-slate-400">{{ branchName(item.branchId) }}</td>
+                <td class="px-3 py-2 text-right font-medium text-gray-900 dark:text-white">{{ formatQuantity(item.quantity) }}</td>
+                <td class="px-3 py-2 text-right text-gray-600 dark:text-slate-400">{{ formatCost(item.unitCost) }}</td>
+                <td class="px-3 py-2 text-right text-gray-600 dark:text-slate-400">{{ formatCost(item.totalValue) }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="px-3 py-4 text-center text-gray-500 dark:text-slate-400">
+                  {{ loading() ? 'Cargando...' : 'No hay stock registrado.' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div class="p-6">
+      <h3 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Historial de movimientos</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500 dark:border-slate-700 dark:text-slate-400">
+              <th class="px-3 py-2">Fecha</th>
+              <th class="px-3 py-2">Ingrediente</th>
+              <th class="px-3 py-2">Bodega</th>
+              <th class="px-3 py-2">Tipo</th>
+              <th class="px-3 py-2 text-right">Cantidad</th>
+              <th class="px-3 py-2 text-right">Costo unit.</th>
+              <th class="px-3 py-2">Motivo</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (movement of movements(); track movement._id) {
+              <tr class="border-b border-gray-100 dark:border-slate-800">
+                <td class="px-3 py-2 text-gray-600 dark:text-slate-400">{{ movementDate(movement.createdAt) }}</td>
+                <td class="px-3 py-2 font-medium text-gray-900 dark:text-white">{{ ingredientName(movement.ingredientId) }}</td>
+                <td class="px-3 py-2 text-gray-600 dark:text-slate-400">{{ branchName(movement.branchId) }}</td>
+                <td class="px-3 py-2">
+                  <span class="inline-flex rounded-full px-3 py-1 text-xs font-medium {{ movementBadge(movement.type) }}">{{ movementLabel(movement.type) }}</span>
+                </td>
+                <td class="px-3 py-2 text-right font-medium text-gray-900 dark:text-white">{{ formatQuantity(movement.quantity) }}</td>
+                <td class="px-3 py-2 text-right text-gray-600 dark:text-slate-400">{{ formatCost(movement.unitCost) }}</td>
+                <td class="px-3 py-2 text-gray-600 dark:text-slate-400">{{ movement.reason }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="px-3 py-4 text-center text-gray-500 dark:text-slate-400">
+                  No hay movimientos registrados.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

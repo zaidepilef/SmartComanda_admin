@@ -1,0 +1,71 @@
+<div class="p-3">
+  <h2 class="mb-1 text-xl font-semibold text-gray-900 dark:text-white">QR de pedidos</h2>
+  <p class="mb-3 text-sm text-gray-500 dark:text-slate-400">
+    Imprimí el QR de cada sucursal activa y pegalo en las mesas o el mostrador para que los clientes pidan desde su teléfono.
+  </p>
+
+  @if (error()) {
+    <div class="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300" role="alert">
+      {{ error() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="py-10 text-center text-sm text-gray-500 dark:text-slate-400">Cargando códigos QR…</div>
+  }
+
+  @if (!loading() && !error() && entries().length === 0) {
+    <div class="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+      No hay sucursales activas. Activá una sucursal para generar su QR.
+    </div>
+  }
+
+  @if (!loading()) {
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      @for (entry of entries(); track entry.branch._id) {
+        <div class="flex flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div class="text-center">
+            <h6 class="font-semibold text-gray-900 dark:text-white">{{ entry.branch.name }}</h6>
+            <span class="text-xs text-gray-500 dark:text-slate-400">{{ entry.branch.type }} · {{ entry.tenantName }}</span>
+          </div>
+
+          <img [src]="entry.dataUrl" alt="QR de {{ entry.branch.name }}" class="h-40 w-40 rounded-lg" />
+
+          <p class="w-full break-all rounded-lg bg-gray-50 px-2 py-1 text-center font-mono text-[11px] text-gray-500 dark:bg-slate-800 dark:text-slate-400">
+            {{ entry.url }}
+          </p>
+
+          <div class="flex gap-2">
+            <button
+              class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+              (click)="copyUrl(entry)"
+            >
+              {{ copiedId() === entry.branch._id ? '¡Copiado!' : 'Copiar URL' }}
+            </button>
+            <button
+              class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:focus:ring-offset-slate-900"
+              (click)="printCard(entry)"
+            >
+              Imprimir
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+@if (printingId()) {
+  @for (entry of entries(); track entry.branch._id) {
+    @if (entry.branch._id === printingId()) {
+      <div class="print-area">
+        <div class="flex flex-col items-center gap-2 text-center">
+          <span class="text-lg font-bold">{{ entry.tenantName }}</span>
+          <span class="text-sm font-semibold">{{ entry.branch.name }}</span>
+          <img [src]="entry.dataUrl" alt="QR de {{ entry.branch.name }}" class="h-64 w-64" />
+          <span class="text-xs">Escaneá y pedí desde tu teléfono</span>
+        </div>
+      </div>
+    }
+  }
+}

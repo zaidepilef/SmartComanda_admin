@@ -1,0 +1,69 @@
+<div>
+  @if (user(); as currentUser) {
+    <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <h5 class="mb-1 text-lg font-semibold text-gray-900 dark:text-white">
+        Bienvenido, {{ currentUser.firstName }} {{ currentUser.lastName }}
+      </h5>
+      <p class="mb-0 text-sm text-gray-500 dark:text-slate-400">{{ currentUser.email }}</p>
+    </div>
+  }
+
+  <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    @for (card of statCards; track card.title) {
+      <div
+        class="flex items-center justify-between rounded-xl p-5 text-white shadow-sm {{ card.bgClass }}"
+      >
+        <div>
+          <h6 class="mb-0 text-xs font-semibold uppercase tracking-wide opacity-90">{{ card.title }}</h6>
+          <div class="mt-2 text-2xl font-bold">{{ card.value }}</div>
+        </div>
+        <app-icon [name]="card.icon" class="h-8 w-8 opacity-75" />
+      </div>
+    }
+  </div>
+
+  <div class="mb-6 rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div class="border-b border-gray-200 px-6 py-4 dark:border-slate-800">
+      <h5 class="mb-0 text-base font-semibold text-gray-900 dark:text-white">Pedidos de la semana</h5>
+    </div>
+    <div class="p-6">
+      <div class="relative h-80">
+        <canvas #chartCanvas></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div class="border-b border-gray-200 px-6 py-4 dark:border-slate-800">
+      <h5 class="mb-0 text-base font-semibold text-gray-900 dark:text-white">Pedidos recientes</h5>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+          <tr>
+            <th scope="col" class="px-6 py-3 font-semibold">#</th>
+            <th scope="col" class="px-6 py-3 font-semibold">Mesa</th>
+            <th scope="col" class="px-6 py-3 font-semibold">Items</th>
+            <th scope="col" class="px-6 py-3 font-semibold">Total</th>
+            <th scope="col" class="px-6 py-3 font-semibold">Estado</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
+          @for (order of recentOrders; track order.id) {
+            <tr class="transition-colors hover:bg-gray-50 dark:hover:bg-slate-800/50">
+              <th scope="row" class="px-6 py-3 font-medium text-gray-900 dark:text-white">{{ order.id }}</th>
+              <td class="px-6 py-3 text-gray-700 dark:text-slate-300">{{ order.table }}</td>
+              <td class="px-6 py-3 text-gray-700 dark:text-slate-300">{{ order.items }}</td>
+              <td class="px-6 py-3 text-gray-700 dark:text-slate-300">{{ order.total }}</td>
+              <td class="px-6 py-3">
+                <span class="inline-flex rounded-full px-3 py-1 text-xs font-medium {{ statusBadge(order.status) }}">
+                  {{ order.status }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

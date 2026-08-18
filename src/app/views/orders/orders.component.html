@@ -1,0 +1,225 @@
+<div class="p-3">
+  <h2 class="mb-3 text-xl font-semibold text-gray-900 dark:text-white">Pedidos</h2>
+
+  <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div class="p-6">
+      <div class="mb-3 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
+        @if (!isCashier) {
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="branchFilter">Sucursal</label>
+            <select
+              id="branchFilter"
+              class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+              [(ngModel)]="branchId"
+            >
+              <option value="">Todas</option>
+              @for (branch of branches; track branch._id) {
+                <option [value]="branch._id">{{ branch.name }}</option>
+              }
+            </select>
+          </div>
+        }
+        <div>
+          <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="statusFilter">Estado</label>
+          <select
+            id="statusFilter"
+            class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            [(ngModel)]="status"
+          >
+            <option value="">Todos</option>
+            <option value="new">Nuevo</option>
+            <option value="preparing">En preparación</option>
+            <option value="ready">Listo</option>
+            <option value="delivered">Entregado</option>
+            <option value="cancelled">Cancelado</option>
+          </select>
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="orderTypeFilter">Tipo</label>
+          <select
+            id="orderTypeFilter"
+            class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            [(ngModel)]="orderType"
+          >
+            <option value="">Todos</option>
+            <option value="takeaway">Para llevar</option>
+            <option value="dinein">En salón</option>
+            <option value="delivery">Delivery</option>
+            <option value="qr">QR</option>
+          </select>
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="paymentMethodFilter">Pago</label>
+          <select
+            id="paymentMethodFilter"
+            class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            [(ngModel)]="paymentMethod"
+          >
+            <option value="">Todos</option>
+            <option value="cash">Efectivo</option>
+            <option value="debit">Débito</option>
+            <option value="credit">Crédito</option>
+            <option value="transfer">Transferencia</option>
+          </select>
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="paymentStatusFilter">Estado de pago</label>
+          <select
+            id="paymentStatusFilter"
+            class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            [(ngModel)]="paymentStatus"
+          >
+            <option value="">Todos</option>
+            <option value="pending">Pendiente</option>
+            <option value="paid">Pagado</option>
+          </select>
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="fromFilter">Desde</label>
+          <input
+            id="fromFilter"
+            type="date"
+            class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            [(ngModel)]="from"
+          />
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="toFilter">Hasta</label>
+          <input
+            id="toFilter"
+            type="date"
+            class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            [(ngModel)]="to"
+          />
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="qFilter">Búsqueda</label>
+          <input
+            id="qFilter"
+            type="text"
+            placeholder="Contacto o N°"
+            class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            [(ngModel)]="q"
+            (keyup.enter)="applyFilters()"
+          />
+        </div>
+      </div>
+
+      <div class="mb-3 flex items-center justify-between gap-2">
+        <div class="flex gap-2">
+          <button
+            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+            (click)="applyFilters()"
+          >
+            Aplicar filtros
+          </button>
+          <button
+            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            (click)="resetFilters()"
+          >
+            Limpiar
+          </button>
+        </div>
+        <span class="text-sm text-gray-500 dark:text-slate-400">{{ orders().length }} pedido(s)</span>
+      </div>
+
+      @if (error()) {
+        <div class="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300" role="alert">
+          {{ error() }}
+        </div>
+      }
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+            <tr>
+              <th class="px-4 py-3 font-semibold">N°</th>
+              <th class="px-4 py-3 font-semibold">Sucursal</th>
+              <th class="px-4 py-3 font-semibold">Contacto</th>
+              <th class="px-4 py-3 font-semibold">Tipo</th>
+              <th class="px-4 py-3 font-semibold">Items</th>
+              <th class="px-4 py-3 text-right font-semibold">Total</th>
+              <th class="px-4 py-3 font-semibold">Pago</th>
+              <th class="px-4 py-3 font-semibold">Estado</th>
+              <th class="px-4 py-3 font-semibold">Fecha</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
+            @for (order of orders(); track order._id) {
+              <tr class="cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-slate-800/50" (click)="toggleDetail(order._id)">
+                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">#{{ order.number ?? '—' }}</td>
+                <td class="px-4 py-3 text-gray-700 dark:text-slate-300">{{ branchName(order.foodtruckId) }}</td>
+                <td class="px-4 py-3 text-gray-700 dark:text-slate-300">{{ order.clientContact || '—' }}</td>
+                <td class="px-4 py-3 text-gray-700 dark:text-slate-300">{{ orderTypeLabel(order.orderType) }}</td>
+                <td class="px-4 py-3 text-gray-700 dark:text-slate-300">{{ order.items.length }}</td>
+                <td class="px-4 py-3 text-right font-medium text-gray-900 dark:text-white">{{ formatMoney(order.total) }}</td>
+                <td class="px-4 py-3 text-gray-700 dark:text-slate-300">
+                  {{ paymentMethodLabel(order.paymentMethod) }}
+                  <span class="ms-1 text-xs text-gray-500 dark:text-slate-400">({{ paymentStatusLabel(order.paymentStatus) }})</span>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex rounded-full px-3 py-1 text-xs font-medium {{ statusBadge(order.status) }}">{{ statusLabel(order.status) }}</span>
+                </td>
+                <td class="px-4 py-3 text-gray-500 dark:text-slate-400">{{ formatDate(order.createdAt) }}</td>
+              </tr>
+              @if (isExpanded(order._id)) {
+                <tr>
+                  <td colspan="9" class="bg-gray-50 px-4 py-4 dark:bg-slate-800/40">
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div>
+                        <h6 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Detalle del pedido</h6>
+                        <ul class="space-y-1 text-sm text-gray-700 dark:text-slate-300">
+                          @for (item of order.items; track $index) {
+                            <li class="flex justify-between gap-4">
+                              <span>{{ item.quantity }} × {{ item.name }}</span>
+                              <span class="font-medium">{{ formatMoney(item.price * item.quantity) }}</span>
+                            </li>
+                          }
+                        </ul>
+                      </div>
+                      <div>
+                        <h6 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Historial de estados</h6>
+                        <ul class="space-y-1 text-sm text-gray-700 dark:text-slate-300">
+                          @for (entry of order.statusHistory ?? []; track $index) {
+                            <li>
+                              {{ statusLabel(entry.status) }} —
+                              <span class="text-gray-500 dark:text-slate-400">{{ formatDate(entry.at) }}</span>
+                            </li>
+                          }
+                        </ul>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              }
+            } @empty {
+              <tr>
+                <td colspan="9" class="px-4 py-4 text-center text-gray-500 dark:text-slate-400">
+                  {{ loading() ? 'Cargando...' : 'No hay pedidos para este filtro.' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="mt-4 flex items-center justify-center gap-2" aria-label="Paginación de pedidos">
+        <button
+          class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          (click)="previousPage()"
+          [disabled]="offset <= 0"
+        >
+          Anterior
+        </button>
+        <span class="px-2 text-sm text-gray-600 dark:text-slate-400">Desde {{ offset + 1 }}</span>
+        <button
+          class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          (click)="nextPage()"
+          [disabled]="orders().length < limit"
+        >
+          Siguiente
+        </button>
+      </nav>
+    </div>
+  </div>
+</div>

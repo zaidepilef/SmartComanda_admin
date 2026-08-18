@@ -1,0 +1,379 @@
+<div class="p-3">
+  <h2 class="mb-3 text-xl font-semibold text-gray-900 dark:text-white">Sucursales</h2>
+
+  <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div class="p-6">
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-end gap-3">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="branchSearch">Buscar</label>
+            <input
+              id="branchSearch"
+              type="text"
+              class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              [ngModel]="search()"
+              (ngModelChange)="onSearchChange($event)"
+              name="branchSearch"
+              placeholder="Nombre de la sucursal"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="activeFilter">Estado</label>
+            <select
+              id="activeFilter"
+              class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              [ngModel]="activeFilter()"
+              (ngModelChange)="onActiveFilterChange($event)"
+              name="activeFilter"
+            >
+              <option value="all">Todos</option>
+              <option value="true">Activos</option>
+              <option value="false">Inactivos</option>
+            </select>
+          </div>
+          @if (isSysadmin) {
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="tenantFilter">Filtrar por tenant</label>
+              <select
+                id="tenantFilter"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [ngModel]="selectedTenantId()"
+                (ngModelChange)="onTenantChange($event)"
+                name="tenantFilter"
+              >
+                <option value="">Todos los tenants</option>
+                @for (tenant of tenants(); track tenant._id) {
+                  <option [value]="tenant._id">{{ tenant.name }}</option>
+                }
+              </select>
+            </div>
+          }
+          <span class="pb-2 text-sm text-gray-500 dark:text-slate-400">{{ branches().length }} sucursal(es)</span>
+        </div>
+        <button
+          class="self-end rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+          (click)="startCreate()"
+        >
+          Nueva sucursal
+        </button>
+      </div>
+
+      @if (error()) {
+        <div class="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300" role="alert">
+          {{ error() }}
+        </div>
+      }
+
+      @if (editing) {
+        <form class="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/50" (ngSubmit)="saveEdit()">
+          <h6 class="mb-3 font-semibold text-gray-900 dark:text-white">Editar sucursal</h6>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+            @if (isSysadmin) {
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editBranchTenant">Tenant</label>
+                <select
+                  id="editBranchTenant"
+                  class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                  [(ngModel)]="editing.tenantId"
+                  name="editBranchTenant"
+                  required
+                >
+                  @for (tenant of tenants(); track tenant._id) {
+                    <option [value]="tenant._id">{{ tenant.name }}</option>
+                  }
+                </select>
+              </div>
+            } @else {
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editBranchTenant">Tenant</label>
+                <input
+                  id="editBranchTenant"
+                  type="text"
+                  class="block w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                  [value]="tenantName(editing.tenantId)"
+                  disabled
+                />
+              </div>
+            }
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editBranchName">Nombre</label>
+              <input
+                id="editBranchName"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="editing.name"
+                name="editBranchName"
+                required
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editBranchType">Tipo</label>
+              <select
+                id="editBranchType"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="editing.type"
+                name="editBranchType"
+                required
+              >
+                <option value="Sucursal">Sucursal</option>
+                <option value="FoodTruck">Food Truck</option>
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editBranchCity">Ciudad</label>
+              <input
+                id="editBranchCity"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="editing.city"
+                name="editBranchCity"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editBranchAddress">Dirección</label>
+              <input
+                id="editBranchAddress"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="editing.address"
+                name="editBranchAddress"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editBranchPhone">Teléfono</label>
+              <input
+                id="editBranchPhone"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="editing.phone"
+                name="editBranchPhone"
+              />
+            </div>
+            <div class="flex items-end pb-2">
+              <label class="inline-flex cursor-pointer items-center gap-2">
+                <input
+                  id="editBranchActive"
+                  type="checkbox"
+                  role="switch"
+                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
+                  [(ngModel)]="editing.active"
+                  name="editBranchActive"
+                />
+                <span class="text-sm font-medium text-gray-700 dark:text-slate-300">Activo</span>
+              </label>
+            </div>
+          </div>
+          <div class="mt-3 flex gap-2">
+            <button
+              type="submit"
+              class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+              [disabled]="saving()"
+            >
+              {{ saving() ? 'Guardando...' : 'Guardar' }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              (click)="cancelEdit()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      }
+
+      @if (creating()) {
+        <form class="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/50" (ngSubmit)="saveCreate()">
+          <h6 class="mb-3 font-semibold text-gray-900 dark:text-white">Nueva sucursal</h6>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+            @if (isSysadmin) {
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newBranchTenant">Tenant</label>
+                <select
+                  id="newBranchTenant"
+                  class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                  [(ngModel)]="newBranch.tenantId"
+                  name="newBranchTenant"
+                  required
+                >
+                  <option value="" disabled>Selecciona un tenant</option>
+                  @for (tenant of tenants(); track tenant._id) {
+                    <option [value]="tenant._id">{{ tenant.name }}</option>
+                  }
+                </select>
+              </div>
+            } @else {
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newBranchTenant">Tenant</label>
+                <input
+                  id="newBranchTenant"
+                  type="text"
+                  class="block w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                  [value]="tenantName(newBranch.tenantId)"
+                  disabled
+                />
+              </div>
+            }
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newBranchName">Nombre</label>
+              <input
+                id="newBranchName"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="newBranch.name"
+                name="newBranchName"
+                required
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newBranchType">Tipo</label>
+              <select
+                id="newBranchType"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="newBranch.type"
+                name="newBranchType"
+                required
+              >
+                <option value="Sucursal">Sucursal</option>
+                <option value="FoodTruck">Food Truck</option>
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newBranchCity">Ciudad</label>
+              <input
+                id="newBranchCity"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="newBranch.city"
+                name="newBranchCity"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newBranchAddress">Dirección</label>
+              <input
+                id="newBranchAddress"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="newBranch.address"
+                name="newBranchAddress"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newBranchPhone">Teléfono</label>
+              <input
+                id="newBranchPhone"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="newBranch.phone"
+                name="newBranchPhone"
+              />
+            </div>
+            <div class="flex items-end pb-2">
+              <label class="inline-flex cursor-pointer items-center gap-2">
+                <input
+                  id="newBranchActive"
+                  type="checkbox"
+                  role="switch"
+                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
+                  [(ngModel)]="newBranch.active"
+                  name="newBranchActive"
+                />
+                <span class="text-sm font-medium text-gray-700 dark:text-slate-300">Activo</span>
+              </label>
+            </div>
+          </div>
+          <div class="mt-3">
+            <h6 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Métodos de pago</h6>
+            <p class="mb-2 text-xs text-gray-500 dark:text-slate-400">
+              Métodos disponibles para cobrar pedidos en esta sucursal.
+            </p>
+            <div class="flex flex-wrap gap-4">
+              @for (option of paymentMethodOptions; track option.value) {
+                <label class="inline-flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
+                    [checked]="newBranch.paymentMethods.includes(option.value)"
+                    (change)="toggleNewPaymentMethod(option.value)"
+                    [name]="'newPaymentMethod' + option.value"
+                  />
+                  <span class="text-sm font-medium text-gray-700 dark:text-slate-300">{{ option.label }}</span>
+                </label>
+              }
+            </div>
+          </div>
+          <div class="mt-3 flex gap-2">
+            <button
+              type="submit"
+              class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+              [disabled]="saving()"
+            >
+              {{ saving() ? 'Creando...' : 'Crear' }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              (click)="cancelCreate()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      }
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        @for (branch of branches(); track branch._id) {
+          <div class="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div class="flex items-center justify-between gap-2 border-b border-gray-100 p-4 dark:border-slate-800">
+              <div class="flex min-w-0 items-center gap-3">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg {{ typeIconBg(branch.type) }}">
+                  <app-icon [name]="typeIcon(branch.type)" class="h-5 w-5" />
+                </div>
+                <div class="min-w-0">
+                  <h3 class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ branch.name }}</h3>
+                  <span class="text-xs text-gray-500 dark:text-slate-400">{{ tenantName(branch.tenantId) }}</span>
+                </div>
+              </div>
+              @if (branch.active) {
+                <span class="inline-flex shrink-0 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200">Activo</span>
+              } @else {
+                <span class="inline-flex shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-slate-800 dark:text-slate-300">Inactivo</span>
+              }
+            </div>
+            <div class="flex-1 space-y-1 p-4 text-sm text-gray-600 dark:text-slate-400">
+              <span class="inline-flex rounded-full px-3 py-1 text-xs font-medium {{ typeBadge(branch.type) }}">{{ typeLabel(branch.type) }}</span>
+              <p class="mt-2">{{ branch.city ?? '—' }}</p>
+              <p class="truncate" title="{{ branch.address ?? '' }}">{{ branch.address ?? '—' }}</p>
+              <p>{{ branch.phone ?? '—' }}</p>
+            </div>
+            <div class="flex gap-2 border-t border-gray-100 p-3 dark:border-slate-800">
+              <a
+                [routerLink]="['/branches', branch._id]"
+                class="flex-1 rounded-lg bg-blue-600 px-3 py-1.5 text-center text-xs font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+              >
+                Ver detalle
+              </a>
+              <button
+                class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                (click)="startEdit(branch)"
+              >
+                Editar
+              </button>
+              <button
+                class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                [disabled]="saving()"
+                (click)="toggleActive(branch)"
+              >
+                {{ branch.active ? 'Desactivar' : 'Activar' }}
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <div class="col-span-full rounded-lg border border-dashed border-gray-300 px-4 py-4 text-center text-gray-500 dark:border-slate-700 dark:text-slate-400">
+            {{ loading() ? 'Cargando...' : 'No hay sucursales.' }}
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

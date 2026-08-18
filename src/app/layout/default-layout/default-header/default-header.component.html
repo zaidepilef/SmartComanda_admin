@@ -1,0 +1,99 @@
+<header class="sticky top-0 z-20 border-b border-gray-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+  <div class="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8">
+    <button
+      type="button"
+      class="rounded-md p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+      (click)="toggleSidebar.emit()"
+      aria-label="Toggle sidebar navigation"
+    >
+      <app-icon name="menu" class="h-6 w-6" />
+    </button>
+
+    <span class="hidden text-sm font-semibold text-gray-900 md:block dark:text-white">
+      Dashboard
+    </span>
+
+    <div class="ms-auto flex items-center gap-2">
+      <button
+        type="button"
+        class="rounded-md p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+        aria-label="Notificaciones"
+      >
+        <app-icon name="bell" class="h-6 w-6" />
+      </button>
+
+      <!-- Theme dropdown -->
+      <div class="relative">
+        <button
+          type="button"
+          class="rounded-md p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+          (click)="themeMenuOpen.set(!themeMenuOpen())"
+          aria-label="Open theme picker"
+        >
+          <app-icon [name]="themeMode() === 'dark' ? 'moon' : themeMode() === 'light' ? 'sun' : 'contrast'" class="h-6 w-6" />
+        </button>
+
+        @if (themeMenuOpen()) {
+          <div class="absolute end-0 z-30 mt-2 w-40 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+            @for (mode of themeModes; track mode.mode) {
+              <button
+                type="button"
+                class="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-slate-700"
+                [class.font-semibold]="themeMode() === mode.mode"
+                (click)="setTheme(mode.mode)"
+              >
+                <app-icon [name]="mode.icon" class="h-5 w-5" />
+                {{ mode.label }}
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- User dropdown -->
+      <div class="relative">
+        <button
+          type="button"
+          class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+          (click)="userMenuOpen.set(!userMenuOpen())"
+          aria-label="Open user menu"
+        >
+          {{ (user()?.firstName ?? 'U').charAt(0) }}{{ (user()?.lastName ?? '').charAt(0) }}
+        </button>
+
+        @if (userMenuOpen()) {
+          <div class="absolute end-0 z-30 mt-2 w-56 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+            <div class="border-b border-gray-100 px-3 py-2 dark:border-slate-700">
+              <p class="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                {{ user()?.firstName }} {{ user()?.lastName }}
+              </p>
+              <p class="truncate text-xs text-gray-500 dark:text-slate-400">{{ user()?.email }}</p>
+            </div>
+
+            <a href="#" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-slate-700">
+              <app-icon name="user" class="h-5 w-5" />
+              Profile
+            </a>
+            <a href="#" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-slate-700">
+              <app-icon name="settings" class="h-5 w-5" />
+              Settings
+            </a>
+            <a href="#" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-slate-700">
+              <app-icon name="lock" class="h-5 w-5" />
+              Lock Account
+            </a>
+            <div class="my-1 border-t border-gray-100 dark:border-slate-700"></div>
+            <button
+              type="button"
+              class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+              (click)="onLogout()"
+            >
+              <app-icon name="logout" class="h-5 w-5" />
+              Logout
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</header>

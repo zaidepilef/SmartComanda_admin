@@ -1,0 +1,301 @@
+<div class="p-3">
+  <h2 class="mb-3 text-xl font-semibold text-gray-900 dark:text-white">Tenants</h2>
+
+  <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div class="p-6">
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <span class="text-sm text-gray-500 dark:text-slate-400">{{ tenants().length }} tenant(s)</span>
+        <button
+          class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+          (click)="startCreate()"
+        >
+          Nuevo tenant
+        </button>
+      </div>
+
+      @if (error()) {
+        <div class="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300" role="alert">
+          {{ error() }}
+        </div>
+      }
+
+      @if (editing) {
+        <form class="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/50" (ngSubmit)="saveEdit()">
+          <h6 class="mb-3 font-semibold text-gray-900 dark:text-white">Editar tenant</h6>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editTenantName">Nombre</label>
+              <input
+                id="editTenantName"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="editing.name"
+                name="editTenantName"
+                required
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editTenantRut">RUT</label>
+              <input
+                id="editTenantRut"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:placeholder:text-slate-500"
+                placeholder="12.345.678-9"
+                [(ngModel)]="editing.rut"
+                name="editTenantRut"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editTenantRazonSocial">Razón social</label>
+              <input
+                id="editTenantRazonSocial"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="editing.razonSocial"
+                name="editTenantRazonSocial"
+              />
+            </div>
+            <div class="flex items-end pb-2">
+              <label class="inline-flex cursor-pointer items-center gap-2">
+                <input
+                  id="editTenantActive"
+                  type="checkbox"
+                  role="switch"
+                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
+                  [(ngModel)]="editing.active"
+                  name="editTenantActive"
+                />
+                <span class="text-sm font-medium text-gray-700 dark:text-slate-300">Activo</span>
+              </label>
+            </div>
+          </div>
+          <div class="mt-3 flex gap-2">
+            <button
+              type="submit"
+              class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+              [disabled]="saving()"
+            >
+              {{ saving() ? 'Guardando...' : 'Guardar' }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              (click)="cancelEdit()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      }
+
+      @if (creating()) {
+        <form class="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/50" (ngSubmit)="saveCreate()">
+          <h6 class="mb-3 font-semibold text-gray-900 dark:text-white">Nuevo tenant</h6>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newTenantName">Nombre</label>
+              <input
+                id="newTenantName"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="newTenant.name"
+                name="newTenantName"
+                required
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newTenantRut">RUT</label>
+              <input
+                id="newTenantRut"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:placeholder:text-slate-500"
+                placeholder="12.345.678-9"
+                [(ngModel)]="newTenant.rut"
+                name="newTenantRut"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newTenantRazonSocial">Razón social</label>
+              <input
+                id="newTenantRazonSocial"
+                type="text"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                [(ngModel)]="newTenant.razonSocial"
+                name="newTenantRazonSocial"
+              />
+            </div>
+            <div class="flex items-end pb-2">
+              <label class="inline-flex cursor-pointer items-center gap-2">
+                <input
+                  id="newTenantActive"
+                  type="checkbox"
+                  role="switch"
+                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
+                  [(ngModel)]="newTenant.active"
+                  name="newTenantActive"
+                />
+                <span class="text-sm font-medium text-gray-700 dark:text-slate-300">Activo</span>
+              </label>
+            </div>
+          </div>
+          <div class="mt-3 flex gap-2">
+            <button
+              type="submit"
+              class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+              [disabled]="saving()"
+            >
+              {{ saving() ? 'Creando...' : 'Crear' }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              (click)="cancelCreate()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      }
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+            <tr>
+              <th class="px-4 py-3 font-semibold">Nombre</th>
+              <th class="px-4 py-3 font-semibold">RUT</th>
+              <th class="px-4 py-3 font-semibold">Razón social</th>
+              <th class="px-4 py-3 font-semibold">Estado</th>
+              <th class="px-4 py-3 text-center font-semibold">Usuarios</th>
+              <th class="px-4 py-3 text-center font-semibold">Sucursales</th>
+              <th class="px-4 py-3 text-right font-semibold">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
+            @for (tenant of tenants(); track tenant._id) {
+              <tr class="transition-colors hover:bg-gray-50 dark:hover:bg-slate-800/50">
+                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ tenant.name }}</td>
+                <td class="px-4 py-3 text-gray-700 dark:text-slate-300">{{ tenant.rut ?? '—' }}</td>
+                <td class="px-4 py-3 text-gray-700 dark:text-slate-300">{{ tenant.razonSocial ?? '—' }}</td>
+                <td class="px-4 py-3">
+                  @if (tenant.active) {
+                    <span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200">Activo</span>
+                  } @else {
+                    <span class="inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-slate-800 dark:text-slate-300">Inactivo</span>
+                  }
+                </td>
+                <td class="px-4 py-3 text-center text-gray-700 dark:text-slate-300">{{ tenant.userCount }}</td>
+                <td class="px-4 py-3 text-center text-gray-700 dark:text-slate-300">{{ tenant.branchCount }}</td>
+                <td class="px-4 py-3 text-right">
+                  <div class="flex justify-end gap-2">
+                    <button
+                      class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                      (click)="openBranches(tenant)"
+                    >
+                      Sucursales
+                    </button>
+                    <button
+                      class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                      (click)="startEdit(tenant)"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      class="rounded-lg border border-amber-300 px-3 py-1.5 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-50 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-slate-800"
+                      (click)="startLoyaltyEdit(tenant)"
+                    >
+                      Puntos
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="px-4 py-4 text-center text-gray-500 dark:text-slate-400">
+                  {{ loading() ? 'Cargando...' : 'No hay tenants.' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (loyaltyEdit) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+    (click)="cancelLoyaltyEdit()"
+  >
+    <div
+      class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900"
+      (click)="$event.stopPropagation()"
+    >
+      <h6 class="mb-1 font-semibold text-gray-900 dark:text-white">
+        Regla de puntos — {{ loyaltyEdit.tenant.name }}
+      </h6>
+      <p class="mb-4 text-xs text-gray-500 dark:text-slate-400">
+        Los clientes acumulan 1 punto por cada monto gastado. Los puntos se acreditan al cobrar en caja un pedido QR.
+      </p>
+
+      <div class="space-y-3">
+        <div>
+          <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="loyaltyAmount">
+            $ por punto (CLP)
+          </label>
+          <input
+            id="loyaltyAmount"
+            type="number"
+            min="1"
+            step="1"
+            class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+            [(ngModel)]="loyaltyEdit.pointsPerAmount"
+            name="loyaltyAmount"
+            required
+          />
+          <p class="mt-1 text-xs text-gray-500 dark:text-slate-400">
+            Ejemplo: con 1000, un pedido de $4.500 suma 4 puntos ({{ currentLoyaltyLabel() }}).
+          </p>
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="loyaltyCurrency">
+            Moneda
+          </label>
+          <input
+            id="loyaltyCurrency"
+            type="text"
+            class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+            [(ngModel)]="loyaltyEdit.currency"
+            name="loyaltyCurrency"
+          />
+        </div>
+      </div>
+
+      <div class="mt-4 flex gap-2">
+        <button
+          type="button"
+          class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+          [disabled]="saving()"
+          (click)="saveLoyaltyEdit()"
+        >
+          {{ saving() ? 'Guardando...' : 'Guardar regla' }}
+        </button>
+        <button
+          type="button"
+          class="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-slate-800"
+          [disabled]="saving()"
+          (click)="disableLoyalty()"
+        >
+          Desactivar
+        </button>
+        <button
+          type="button"
+          class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+          (click)="cancelLoyaltyEdit()"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+}
