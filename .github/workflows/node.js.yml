@@ -40,9 +40,9 @@ jobs:
           cat > src/environments/environment.prod.ts <<EOF
           export const environment = {
             production: true,
-            apiUrl: '${{ vars.API_URL }}',
-            turnstileSiteKey: '${{ vars.TURNSTILE_SITE_KEY }}',
-            publicUrl: '${{ vars.PUBLIC_URL }}',
+            apiUrl: '${{ vars.APIURL }}',
+            turnstileSiteKey: '${{ vars.TURNSTILESITEKEY }}',
+            publicUrl: '${{ vars.PUBLICURL }}',
           };
           EOF
 
