@@ -53,6 +53,7 @@ jobs:
         run: |
           echo "API URL: ${{ vars.APIURL }}"
           echo "Public URL: ${{ vars.PUBLICURL }}"
+          echo "turnstile Site Key: ${{ vars.TURNSTILESITEKEY }}"
 
       # 6. Compilar Angular
       - name: Build Angular
