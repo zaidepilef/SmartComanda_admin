@@ -33,7 +33,7 @@ jobs:
       - name: Upload dist
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist/smartcomanda_admin/browser
+          path: ./dist/SmartComanda_admin/browser
 
   deploy:
     needs: build
