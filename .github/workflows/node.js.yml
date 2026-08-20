@@ -49,8 +49,8 @@ jobs:
       # 5. Mostrar configuración (sin secretos)
       - name: Show production configuration
         run: |
-          echo "API URL: ${{ vars.API_URL }}"
-          echo "Public URL: ${{ vars.PUBLIC_URL }}"
+          echo "API URL: ${{ vars.APIURL }}"
+          echo "Public URL: ${{ vars.PUBLICURL }}"
 
       # 6. Compilar Angular
       - name: Build Angular
