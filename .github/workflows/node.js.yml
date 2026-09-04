@@ -43,7 +43,7 @@ jobs:
           export const environment = {
             production: true,
             apiUrl: '${{ vars.APIURL }}',
-            turnstileSiteKey: '${{ vars.TURNSTILESITEKEY }}',
+            turnstileSiteKey: '${{ vars.TURNSTILESITEKEY != '' && vars.TURNSTILESITEKEY || '1x00000000000000000000AA' }}',
             publicUrl: '${{ vars.PUBLICURL }}',
           };
           EOF

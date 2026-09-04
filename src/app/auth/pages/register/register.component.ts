@@ -67,11 +67,11 @@ export class RegisterComponent {
   }
 
   get canSubmit(): boolean {
-    return this.form.valid && !this.loading();
+    return this.form.valid && this.captchaToken !== null && !this.loading();
   }
 
   submit(): void {
-    if (this.form.invalid) {
+    if (this.form.invalid || this.captchaToken === null) {
       return;
     }
 
@@ -81,7 +81,7 @@ export class RegisterComponent {
     const { firstName, lastName, email, password } = this.form.getRawValue();
 
     this.#authService
-      .register({ firstName, lastName, email, password, captchaToken: this.captchaToken ?? '' })
+      .register({ firstName, lastName, email, password, captchaToken: this.captchaToken })
       .subscribe({
         next: () => {
           this.registered.set(true);

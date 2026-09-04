@@ -79,6 +79,13 @@
             }
           </div>
 
+          <div class="mb-4">
+            <app-turnstile />
+            @if (captchaToken === null && form.touched) {
+              <small class="mt-1 block text-xs text-red-600 dark:text-red-400">Resuelve el captcha para continuar.</small>
+            }
+          </div>
+
           @if (error()) {
             <div class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300" role="alert">
               {{ error() }}
