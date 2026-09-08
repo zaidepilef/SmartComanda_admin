@@ -83,4 +83,8 @@ export class UserService {
   update(id: string, payload: UserUpdatePayload): Observable<User> {
     return this.#http.put<User>(`${environment.apiUrl}/api/users/${id}`, payload);
   }
+
+  resetPassword(id: string, password: string): Observable<User> {
+    return this.#http.post<User>(`${environment.apiUrl}/api/users/${id}/reset-password`, { password });
+  }
 }

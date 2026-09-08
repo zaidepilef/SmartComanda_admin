@@ -182,6 +182,41 @@ export class UsersComponent  implements OnInit {
     this.#loadBranches(user.tenantId || undefined);
   }
 
+  resetTarget: User | null = null;
+  resetPasswordValue = '';
+
+  startReset(user: User): void {
+    this.resetTarget = user;
+    this.resetPasswordValue = '';
+    this.error.set('');
+  }
+
+  cancelReset(): void {
+    this.resetTarget = null;
+    this.resetPasswordValue = '';
+  }
+
+  confirmReset(): void {
+    if (!this.resetTarget) {
+      return;
+    }
+
+    this.saving.set(true);
+    this.error.set('');
+
+    this.#userService.resetPassword(this.resetTarget._id, this.resetPasswordValue).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.cancelReset();
+        this.#load();
+      },
+      error: (err) => {
+        this.saving.set(false);
+        this.error.set(err.error?.error ?? 'No se pudo resetear la contraseña.');
+      }
+    });
+  }
+
   cancelEdit(): void {
     this.editing = null;
   }
