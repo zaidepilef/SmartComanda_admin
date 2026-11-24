@@ -164,6 +164,42 @@
                   }
                 </div>
               </div>
+              <div class="mt-6">
+                <h6 class="mb-1 text-sm font-semibold text-gray-900 dark:text-white">Ubicación y delivery</h6>
+                <p class="mb-3 text-xs text-gray-500 dark:text-slate-400">
+                  Punto exacto de la sucursal, desde donde se estima la distancia y el tiempo de envío a cada cliente
+                  (línea recta × 1,4 por las calles ÷ velocidad promedio). Los límites solo marcan el pedido como
+                  "fuera de rango"; no lo bloquean.
+                </p>
+                <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                  <div class="lg:col-span-2">
+                    <app-location-picker
+                      idPrefix="detailBranch"
+                      [lat]="editing.lat"
+                      [lng]="editing.lng"
+                      (changed)="onLocationChange($event)"
+                    />
+                  </div>
+                  <div class="space-y-3">
+                    <div>
+                      <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="detailDeliveryMaxKm">Distancia máxima (km)</label>
+                      <input id="detailDeliveryMaxKm" type="number" min="0" step="0.1" class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                        [(ngModel)]="editing.deliveryMaxKm" name="detailDeliveryMaxKm" placeholder="Sin límite" />
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="detailDeliveryMaxMinutes">Tiempo máximo (min)</label>
+                      <input id="detailDeliveryMaxMinutes" type="number" min="0" step="1" class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                        [(ngModel)]="editing.deliveryMaxMinutes" name="detailDeliveryMaxMinutes" placeholder="Sin límite" />
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="detailDeliveryAvgSpeed">Velocidad promedio del repartidor (km/h)</label>
+                      <input id="detailDeliveryAvgSpeed" type="number" min="5" max="120" step="1" class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                        [(ngModel)]="editing.deliveryAvgSpeedKmh" name="detailDeliveryAvgSpeed" placeholder="25" />
+                      <p class="mt-1 text-xs text-gray-500 dark:text-slate-400">Moto en ciudad: ~25 km/h. Bicicleta: ~15 km/h.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div class="mt-4 flex gap-2">
                 <button
                   type="submit"

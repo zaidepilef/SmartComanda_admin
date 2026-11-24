@@ -44,6 +44,7 @@ export const routes: Routes = [
       },
       {
         path: 'users',
+        canActivate: [authGuard, roleGuard(managerRoles)],
         loadComponent: () => import('./views/users/users.component').then((m) => m.UsersComponent),
         data: {
           title: 'Usuarios'
@@ -70,6 +71,24 @@ export const routes: Routes = [
         canActivate: [authGuard, roleGuard(managerRoles)],
         data: {
           title: 'Detalle de sucursal'
+        }
+      },
+      {
+        path: 'delivery-analytics',
+        loadComponent: () =>
+          import('./views/delivery-analytics/delivery-analytics.component').then((m) => m.DeliveryAnalyticsComponent),
+        canActivate: [authGuard, roleGuard(managerRoles)],
+        data: {
+          title: 'Análisis delivery'
+        }
+      },
+      {
+        path: 'customer-journey',
+        loadComponent: () =>
+          import('./views/customer-journey/customer-journey.component').then((m) => m.CustomerJourneyComponent),
+        canActivate: [authGuard, roleGuard(managerRoles)],
+        data: {
+          title: 'Eventos de clientes'
         }
       },
       {

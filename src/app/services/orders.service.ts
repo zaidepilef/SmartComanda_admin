@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
+import { DeliveryFields } from '../utils/delivery';
 
 export interface OrderItemInput {
   dishId: string;
@@ -24,7 +25,7 @@ export type OrderType = 'takeaway' | 'dinein' | 'delivery' | 'qr';
 export type PaymentMethod = 'cash' | 'debit' | 'credit' | 'transfer';
 export type PaymentStatus = 'pending' | 'paid';
 
-export interface Order {
+export interface Order extends DeliveryFields {
   _id: string;
   tenantId: string;
   foodtruckId: string;
@@ -33,7 +34,12 @@ export interface Order {
   orderType?: string;
   paymentStatus?: string;
   paymentMethod?: string;
+  /** Nombre de quien cobró el pedido (null si no está cobrado o es anterior al registro). */
+  paidByName?: string | null;
+  paidAt?: string | null;
   clientContact?: string;
+  clientName?: string | null;
+  clientPhone?: string | null;
   items: OrderItem[];
   total: number;
   createdAt: string;
