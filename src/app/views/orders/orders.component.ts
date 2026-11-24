@@ -38,6 +38,7 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
   pending: 'Pendiente',
   paid: 'Pagado',
+  refunded: 'Anulado (revertido)',
 };
 
 @Component({

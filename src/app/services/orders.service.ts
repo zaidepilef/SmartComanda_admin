@@ -33,6 +33,9 @@ export interface Order {
   orderType?: string;
   paymentStatus?: string;
   paymentMethod?: string;
+  /** Nombre de quien cobró el pedido (null si no está cobrado o es anterior al registro). */
+  paidByName?: string | null;
+  paidAt?: string | null;
   clientContact?: string;
   items: OrderItem[];
   total: number;
