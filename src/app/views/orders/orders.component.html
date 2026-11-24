@@ -149,8 +149,13 @@
               <tr class="cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-slate-800/50" (click)="toggleDetail(order._id)">
                 <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">#{{ order.number ?? '—' }}</td>
                 <td class="px-4 py-3 text-gray-700 dark:text-slate-300">{{ branchName(order.foodtruckId) }}</td>
-                <td class="px-4 py-3 text-gray-700 dark:text-slate-300">{{ order.clientContact || '—' }}</td>
-                <td class="px-4 py-3 text-gray-700 dark:text-slate-300">{{ orderTypeLabel(order.orderType) }}</td>
+                <td class="px-4 py-3 text-gray-700 dark:text-slate-300">{{ contactLabel(order) }}</td>
+                <td class="px-4 py-3 text-gray-700 dark:text-slate-300">
+                  {{ orderTypeLabel(order.orderType) }}
+                  @if (order.deliveryOutOfRange) {
+                    <span class="ms-1 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">Fuera de rango</span>
+                  }
+                </td>
                 <td class="px-4 py-3 text-gray-700 dark:text-slate-300">{{ order.items.length }}</td>
                 <td class="px-4 py-3 text-right font-medium text-gray-900 dark:text-white">{{ formatMoney(order.total) }}</td>
                 <td class="px-4 py-3 text-gray-700 dark:text-slate-300">
@@ -168,6 +173,31 @@
               @if (isExpanded(order._id)) {
                 <tr>
                   <td colspan="9" class="bg-gray-50 px-4 py-4 dark:bg-slate-800/40">
+                    @if (order.deliveryAddress) {
+                      <div class="mb-4 rounded-lg border border-gray-200 bg-white p-3 text-sm dark:border-slate-700 dark:bg-slate-900">
+                        <h6 class="mb-1 text-sm font-semibold text-gray-900 dark:text-white">Entrega a domicilio</h6>
+                        <div class="text-gray-700 dark:text-slate-300">{{ order.deliveryAddress }}</div>
+                        @if (order.deliveryReference) {
+                          <div class="text-gray-500 dark:text-slate-400">{{ order.deliveryReference }}</div>
+                        }
+                        <div class="mt-1 flex flex-wrap items-center gap-3">
+                          @if (deliveryEstimateLabel(order); as estimate) {
+                            <span class="font-medium text-gray-900 dark:text-white">{{ estimate }}</span>
+                          } @else {
+                            <span class="text-gray-500 dark:text-slate-400">Sin estimación (falta ubicación de la sucursal o del cliente)</span>
+                          }
+                          @if (order.deliveryOutOfRange) {
+                            <span class="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">Fuera de rango</span>
+                          }
+                          @if (deliveryMapUrl(order); as url) {
+                            <a class="text-blue-600 hover:underline dark:text-blue-400" [href]="url" target="_blank" rel="noopener" (click)="$event.stopPropagation()">Ver en mapa</a>
+                          }
+                          @if (order.deliveryAccuracyM != null) {
+                            <span class="text-xs text-gray-500 dark:text-slate-400">Precisión GPS ±{{ order.deliveryAccuracyM }} m</span>
+                          }
+                        </div>
+                      </div>
+                    }
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div>
                         <h6 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Detalle del pedido</h6>

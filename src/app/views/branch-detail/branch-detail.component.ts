@@ -5,7 +5,9 @@ import { NgClass } from '@angular/common';
 import QRCode from 'qrcode';
 
 import { environment } from '../../../environments/environment';
+import { LocationPickerComponent } from '../../components/location-picker/location-picker.component';
 import { Branch, BranchService, PaymentMethod } from '../../services/branches.service';
+import { LatLng } from '../../utils/parse-maps-link';
 
 type DetailTab = 'config' | 'menu' | 'tables' | 'schedules' | 'settings' | 'qr';
 
@@ -27,11 +29,26 @@ const TAB_LABELS: Record<DetailTab, string> = {
 
 const PLACEHOLDER_TABS: DetailTab[] = ['menu', 'tables', 'schedules', 'settings'];
 
+/** Número > 0 o null (campo vacío borra el límite). */
+function positiveOrNull(value: number | null | undefined, integer = false): number | null {
+  if (value === null || value === undefined || `${value}` === '') {
+    return null;
+  }
+
+  const number = Number(value);
+
+  if (!Number.isFinite(number) || number <= 0) {
+    return null;
+  }
+
+  return integer ? Math.round(number) : number;
+}
+
 const ALL_TABS: DetailTab[] = ['config', 'qr', 'menu', 'tables', 'schedules', 'settings'];
 
 @Component({
   selector: 'app-branch-detail',
-  imports: [FormsModule, RouterLink, NgClass],
+  imports: [FormsModule, RouterLink, NgClass, LocationPickerComponent],
   templateUrl: './branch-detail.component.html'
 })
 export class BranchDetailComponent implements OnInit {
@@ -154,6 +171,15 @@ export class BranchDetailComponent implements OnInit {
     this.editing.paymentMethods = methods;
   }
 
+  onLocationChange(point: LatLng | null): void {
+    if (!this.editing) {
+      return;
+    }
+
+    this.editing.lat = point?.lat ?? null;
+    this.editing.lng = point?.lng ?? null;
+  }
+
   saveEdit(): void {
     if (!this.editing) {
       return;
@@ -163,6 +189,8 @@ export class BranchDetailComponent implements OnInit {
     this.error.set('');
 
     const { _id, tenantId, name, type, address, city, phone, active } = this.editing;
+    const { lat, lng, deliveryMaxKm, deliveryMaxMinutes, deliveryAvgSpeedKmh } = this.editing;
+    const hasPoint = lat != null && lng != null;
     const paymentMethods = this.editing.paymentMethods?.length
       ? this.editing.paymentMethods
       : undefined;
@@ -177,6 +205,11 @@ export class BranchDetailComponent implements OnInit {
         phone: phone || undefined,
         active,
         paymentMethods,
+        lat: hasPoint ? lat : null,
+        lng: hasPoint ? lng : null,
+        deliveryMaxKm: positiveOrNull(deliveryMaxKm),
+        deliveryMaxMinutes: positiveOrNull(deliveryMaxMinutes, true),
+        deliveryAvgSpeedKmh: positiveOrNull(deliveryAvgSpeedKmh) ?? undefined,
       })
       .subscribe({
         next: (updated) => {

@@ -74,6 +74,15 @@ export const routes: Routes = [
         }
       },
       {
+        path: 'delivery-analytics',
+        loadComponent: () =>
+          import('./views/delivery-analytics/delivery-analytics.component').then((m) => m.DeliveryAnalyticsComponent),
+        canActivate: [authGuard, roleGuard(managerRoles)],
+        data: {
+          title: 'Análisis delivery'
+        }
+      },
+      {
         path: 'customer-journey',
         loadComponent: () =>
           import('./views/customer-journey/customer-journey.component').then((m) => m.CustomerJourneyComponent),

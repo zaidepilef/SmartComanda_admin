@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../auth/auth.service';
 import { Branch, BranchService } from '../../services/branches.service';
 import { Order, OrderService, OrderStatus } from '../../services/orders.service';
+import { deliveryEstimateLabel, deliveryMapUrl } from '../../utils/delivery';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   new: 'Nuevo',
@@ -173,6 +174,18 @@ export class OrdersComponent implements OnInit {
 
   statusBadge(status: string): string {
     return STATUS_BADGES[status as OrderStatus] ?? 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-300';
+  }
+
+  readonly deliveryMapUrl = deliveryMapUrl;
+  readonly deliveryEstimateLabel = deliveryEstimateLabel;
+
+  /** Contacto visible: el escrito en caja o el nombre/teléfono que dejó el cliente en la app. */
+  contactLabel(order: Order): string {
+    if (order.clientContact) {
+      return order.clientContact;
+    }
+
+    return [order.clientName, order.clientPhone].filter(Boolean).join(' · ') || '—';
   }
 
   orderTypeLabel(orderType: string | undefined): string {
