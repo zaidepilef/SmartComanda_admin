@@ -33,6 +33,10 @@ export const EVENT_LABELS: Record<JourneyEventType, string> = {
 
 export const FAILURE_EVENTS = new Set<JourneyEventType>(['menu_failed', 'order_failed']);
 
+function plural(count: number, singular: string, pluralForm: string): string {
+  return `${count} ${count === 1 ? singular : pluralForm}`;
+}
+
 export function formatMoney(value: unknown): string {
   return typeof value === 'number' ? `$${value.toLocaleString('es-CL')}` : '';
 }
@@ -68,16 +72,16 @@ export function describeEvent(event: JourneyEvent, dishNames: Map<string, string
 
   switch (event.type) {
     case 'menu_loaded':
-      return `${data['dishCount']} platos disponibles`;
+      return plural(Number(data['dishCount']), 'plato disponible', 'platos disponibles');
     case 'item_added':
     case 'item_removed': {
       const name = dishNames.get(String(data['dishId'])) ?? 'Plato';
       return `${name} × ${data['quantity']}`;
     }
     case 'cart_opened':
-      return `${data['itemCount']} ítems en el carrito`;
+      return `${plural(Number(data['itemCount']), 'ítem', 'ítems')} en el carrito`;
     case 'order_submitted':
-      return `${data['itemCount']} ítems · ${formatMoney(data['total'])}`;
+      return `${plural(Number(data['itemCount']), 'ítem', 'ítems')} · ${formatMoney(data['total'])}`;
     case 'order_created':
       return `Pedido #${data['number']} · ${formatMoney(data['total'])}`;
     case 'menu_failed':
