@@ -1,0 +1,170 @@
+<div class="p-3">
+  <h2 class="mb-1 text-xl font-semibold text-gray-900 dark:text-white">Eventos de clientes</h2>
+  <p class="mb-3 text-sm text-gray-500 dark:text-slate-400">
+    Seguí a cada cliente del QR: en qué paso está, qué hizo y por qué falló su pedido. Se actualiza cada 10 segundos.
+  </p>
+
+  <div class="mb-3 flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div>
+      <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="journeyBranch">Sucursal</label>
+      <select
+        id="journeyBranch"
+        class="block w-56 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+        [(ngModel)]="branchId"
+        (ngModelChange)="onBranchChange()"
+      >
+        @for (branch of branches(); track branch._id) {
+          <option [value]="branch._id">{{ branch.name }}</option>
+        }
+      </select>
+    </div>
+    <div>
+      <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="journeyDay">Día</label>
+      <input
+        id="journeyDay"
+        type="date"
+        class="block rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+        [(ngModel)]="day"
+        (ngModelChange)="onDayChange()"
+      />
+    </div>
+    <button
+      class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+      (click)="refresh()"
+    >
+      {{ loading() ? 'Actualizando…' : 'Actualizar' }}
+    </button>
+    <span class="text-xs text-gray-500 dark:text-slate-400">Última actualización: {{ lastRefreshLabel() }}</span>
+  </div>
+
+  @if (error()) {
+    <div class="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300" role="alert">
+      {{ error() }}
+    </div>
+  }
+
+  @if (branches().length === 0 && !error()) {
+    <div class="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+      No hay sucursales para mostrar.
+    </div>
+  }
+
+  @if (funnel(); as data) {
+    <div class="mb-3 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      @for (step of funnelSteps(); track step.label) {
+        <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div class="text-xs text-gray-500 dark:text-slate-400">{{ step.label }}</div>
+          <div class="mt-1 flex items-baseline gap-2">
+            <span class="text-2xl font-semibold tabular-nums text-gray-900 dark:text-white">{{ step.value }}</span>
+            <span class="text-xs tabular-nums text-gray-500 dark:text-slate-400">{{ step.percent }}%</span>
+          </div>
+          <div class="mt-2 h-1.5 rounded-full bg-gray-100 dark:bg-slate-800">
+            <div class="h-1.5 rounded-full bg-blue-600" [style.width.%]="step.percent"></div>
+          </div>
+        </div>
+      }
+      <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="text-xs text-gray-500 dark:text-slate-400">Intentos fallidos</div>
+        <div class="mt-1 text-2xl font-semibold tabular-nums {{ data.failedAttempts > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white' }}">
+          {{ data.failedAttempts }}
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="grid grid-cols-1 gap-3 xl:grid-cols-5">
+    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 xl:col-span-3">
+      <div class="border-b border-gray-200 px-4 py-3 text-sm font-medium text-gray-900 dark:border-slate-800 dark:text-white">
+        Sesiones ({{ sessions().length }})
+      </div>
+
+      @if (sessions().length === 0) {
+        <div class="p-8 text-center text-sm text-gray-500 dark:text-slate-400">
+          Sin actividad de clientes en este día.
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-slate-800/50 dark:text-slate-400">
+              <tr>
+                <th class="px-4 py-2 font-medium">Inicio</th>
+                <th class="px-4 py-2 font-medium">Cliente</th>
+                <th class="px-4 py-2 font-medium">Etapa</th>
+                <th class="px-4 py-2 font-medium">Pedido</th>
+                <th class="px-4 py-2 font-medium">Última actividad</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (session of sessions(); track session.sessionId) {
+                <tr
+                  class="cursor-pointer border-t border-gray-100 dark:border-slate-800 {{ selectedSessionId() === session.sessionId ? 'bg-blue-50 dark:bg-slate-800' : 'hover:bg-gray-50 dark:hover:bg-slate-800/50' }}"
+                  (click)="selectSession(session)"
+                >
+                  <td class="whitespace-nowrap px-4 py-2 tabular-nums text-gray-700 dark:text-slate-300">{{ formatTime(session.startedAt) }}</td>
+                  <td class="px-4 py-2 text-gray-900 dark:text-slate-100">{{ customerLabel(session) }}</td>
+                  <td class="px-4 py-2">
+                    <span class="inline-block rounded-full px-2 py-0.5 text-xs font-medium {{ stageBadges[session.stage] }}">
+                      {{ stageLabels[session.stage] }}
+                    </span>
+                    @if (session.abandoned) {
+                      <span class="ml-1 inline-block rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-slate-700 dark:text-slate-200">Abandonó</span>
+                    }
+                    @if (session.lastFailure) {
+                      <div class="mt-1 text-xs text-red-600 dark:text-red-400">{{ describeFailure(session.lastFailure) }}</div>
+                    }
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-2 tabular-nums text-gray-700 dark:text-slate-300">
+                    @if (session.orderNumber !== null) {
+                      #{{ session.orderNumber }} · {{ formatMoney(session.orderTotal) }}
+                    } @else {
+                      —
+                    }
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-2 text-gray-500 dark:text-slate-400">{{ relative(session.lastActivityAt) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 xl:col-span-2">
+      <div class="border-b border-gray-200 px-4 py-3 text-sm font-medium text-gray-900 dark:border-slate-800 dark:text-white">
+        Línea de tiempo
+      </div>
+
+      @if (!selectedSessionId()) {
+        <div class="p-8 text-center text-sm text-gray-500 dark:text-slate-400">
+          Elegí una sesión para ver cada paso del cliente.
+        </div>
+      } @else if (!timeline()) {
+        <div class="p-8 text-center text-sm text-gray-500 dark:text-slate-400">Cargando…</div>
+      } @else {
+        <ol class="space-y-3 p-4">
+          @for (event of timeline()!.events; track event.id) {
+            <li class="flex gap-3">
+              <span
+                class="mt-1.5 h-2 w-2 shrink-0 rounded-full {{ failureEvents.has(event.type) ? 'bg-red-500' : event.type === 'order_created' ? 'bg-emerald-500' : 'bg-blue-500' }}"
+              ></span>
+              <div class="min-w-0">
+                <div class="text-sm text-gray-900 dark:text-slate-100">
+                  {{ eventLabels[event.type] }}
+                  @if (event.source === 'server') {
+                    <span class="ml-1 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] uppercase text-gray-500 dark:bg-slate-800 dark:text-slate-400">servidor</span>
+                  }
+                </div>
+                @if (eventDetail(event)) {
+                  <div class="break-words text-xs {{ failureEvents.has(event.type) ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-slate-400' }}">
+                    {{ eventDetail(event) }}
+                  </div>
+                }
+                <div class="text-[11px] tabular-nums text-gray-400 dark:text-slate-500">{{ formatTime(event.occurredAt) }}</div>
+              </div>
+            </li>
+          }
+        </ol>
+      }
+    </div>
+  </div>
+</div>
