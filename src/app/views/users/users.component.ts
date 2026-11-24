@@ -1,7 +1,15 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { CREATABLE_ROLES, User, UserRole, UserService, UserStatus, UserUpdatePayload } from './user.service';
+import {
+  ASSIGNABLE_ROLES,
+  BRANCH_ROLES,
+  User,
+  UserRole,
+  UserService,
+  UserStatus,
+  UserUpdatePayload,
+} from './user.service';
 import { AuthService } from '../../auth/auth.service';
 import { Tenant, TenantService } from '../../services/tenants.service';
 import { Branch, BranchService } from '../../services/branches.service';
@@ -19,10 +27,11 @@ const STATUS_BADGES: Record<UserStatus, string> = {
 };
 
 const ROLE_LABELS: Record<UserRole, string> = {
-  sysadmin: 'Sysadmin',
-  owner: 'Owner',
-  admin: 'Admin',
+  sysadmin: 'Sistema',
+  owner: 'Propietario',
+  admin: 'Encargado',
   cashier: 'Cajero',
+  cook: 'Cocinero',
 };
 
 const ROLE_BADGES: Record<UserRole, string> = {
@@ -30,6 +39,7 @@ const ROLE_BADGES: Record<UserRole, string> = {
   owner: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200',
   admin: 'bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-200',
   cashier: 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-300',
+  cook: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200',
 };
 
 interface NewUserForm {
@@ -78,16 +88,24 @@ export class UsersComponent  implements OnInit {
   page = 1;
   limit = 10;
   editing: User | null = null;
-  newUser: NewUserForm = { ...EMPTY_NEW_USER };
+  newUser: NewUserForm = { ...EMPTY_NEW_USER, role: this.creatableRoles[0] ?? 'cashier' };
   tenants: Tenant[] = [];
   branches: Branch[] = [];
   get isSysadmin(): boolean {
     return this.#authService.user()?.role === 'sysadmin';
   }
 
-  /** Roles the current actor may assign; only a sysadmin can grant sysadmin (the API enforces it too). */
+  /**
+   * Roles que el usuario actual puede asignar: owner → Encargado, Cajero, Cocinero;
+   * Encargado → Cajero, Cocinero. La API aplica la misma regla.
+   */
   get creatableRoles(): UserRole[] {
-    return this.isSysadmin ? CREATABLE_ROLES : CREATABLE_ROLES.filter((role) => role !== 'sysadmin');
+    const role = this.#authService.user()?.role;
+    return role ? ASSIGNABLE_ROLES[role] ?? [] : [];
+  }
+
+  isBranchRole(role: UserRole | undefined): boolean {
+    return role !== undefined && BRANCH_ROLES.includes(role);
   }
 
   /**
@@ -98,7 +116,8 @@ export class UsersComponent  implements OnInit {
     if (user._id === this.#authService.user()?._id) {
       return false;
     }
-    return user.role !== 'sysadmin' || this.isSysadmin;
+    // Solo se edita el rol de quien tiene un rol que uno mismo podría asignar.
+    return user.role === undefined || this.creatableRoles.includes(user.role);
   }
 
   ngOnInit(): void {
@@ -242,7 +261,7 @@ export class UsersComponent  implements OnInit {
   }
 
   startCreate(): void {
-    this.newUser = { ...EMPTY_NEW_USER };
+    this.newUser = { ...EMPTY_NEW_USER, role: this.creatableRoles[0] ?? 'cashier' };
     this.creating.set(true);
     this.error.set('');
     this.#loadBranches();
@@ -279,7 +298,7 @@ export class UsersComponent  implements OnInit {
         status,
         roles: [role],
         tenantId: tenantId || undefined,
-        branchId: role === 'cashier' ? branchId || undefined : undefined,
+        branchId: this.isBranchRole(role) ? branchId || undefined : undefined,
       })
       .subscribe({
         next: () => {
@@ -315,7 +334,7 @@ export class UsersComponent  implements OnInit {
       payload.tenantId = tenantId;
     }
 
-    if (role === 'cashier') {
+    if (this.isBranchRole(role)) {
       payload.branchId = branchId || undefined;
     }
 

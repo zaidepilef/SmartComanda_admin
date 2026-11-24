@@ -44,6 +44,7 @@ export const routes: Routes = [
       },
       {
         path: 'users',
+        canActivate: [authGuard, roleGuard(managerRoles)],
         loadComponent: () => import('./views/users/users.component').then((m) => m.UsersComponent),
         data: {
           title: 'Usuarios'

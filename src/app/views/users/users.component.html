@@ -112,7 +112,7 @@
                   }
                 </select>
               </div>
-              @if (editing.role === 'cashier') {
+              @if (isBranchRole(editing.role)) {
                 <div>
                   <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editBranch">Sucursal</label>
                   <select
@@ -240,7 +240,7 @@
                 }
               </select>
             </div>
-            @if (newUser.role === 'cashier') {
+            @if (isBranchRole(newUser.role)) {
               <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="newBranch">Sucursal</label>
                 <select

@@ -6,9 +6,21 @@ import { environment } from '../../../environments/environment';
 
 export type UserStatus = 'active' | 'inactive' | 'pending';
 
-export type UserRole = 'sysadmin' | 'owner' | 'admin' | 'cashier';
+export type UserRole = 'sysadmin' | 'owner' | 'admin' | 'cashier' | 'cook';
 
-export const CREATABLE_ROLES: UserRole[] = ['sysadmin', 'owner', 'admin', 'cashier'];
+export const CREATABLE_ROLES: UserRole[] = ['sysadmin', 'owner', 'admin', 'cashier', 'cook'];
+
+/** Roles que cada rol puede asignar (la API aplica la misma regla). */
+export const ASSIGNABLE_ROLES: Record<UserRole, UserRole[]> = {
+  sysadmin: CREATABLE_ROLES,
+  owner: ['admin', 'cashier', 'cook'],
+  admin: ['cashier', 'cook'],
+  cashier: [],
+  cook: [],
+};
+
+/** Roles que operan en una sucursal concreta. */
+export const BRANCH_ROLES: UserRole[] = ['cashier', 'cook'];
 
 export interface User {
   _id: string;
@@ -18,6 +30,7 @@ export interface User {
   status: UserStatus;
   name?: string;
   role?: UserRole;
+  roles?: UserRole[];
   tenantId?: string;
   branchId?: string;
   createdAt?: string;

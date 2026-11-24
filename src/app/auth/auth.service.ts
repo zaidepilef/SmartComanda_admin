@@ -5,13 +5,26 @@ import { finalize, Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 
+export type AuthRole = 'sysadmin' | 'owner' | 'admin' | 'cashier' | 'cook';
+
+/** Roles que usan el panel admin. Cajero y Cocinero trabajan solo en el POS. */
+export const ADMIN_PANEL_ROLES: AuthRole[] = ['sysadmin', 'owner', 'admin'];
+
+export const POS_ONLY_MESSAGE = 'Tu rol trabaja en el POS. Ingresa desde la app POS.';
+
+export function canUseAdminPanel(user: AuthUser | null): boolean {
+  const roles = user?.roles?.length ? user.roles : user?.role ? [user.role] : [];
+  return roles.some((role) => ADMIN_PANEL_ROLES.includes(role));
+}
+
 export interface AuthUser {
   _id: string;
   firstName: string;
   lastName: string;
   email: string;
   status: string;
-  role?: 'sysadmin' | 'owner' | 'admin' | 'cashier';
+  role?: AuthRole;
+  roles?: AuthRole[];
   tenantId?: string;
   createdAt?: string;
   updatedAt?: string;
