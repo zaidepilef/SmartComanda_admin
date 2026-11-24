@@ -1,7 +1,16 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { CREATABLE_ROLES, User, UserRole, UserService, UserStatus } from './user.service';
+import {
+  ASSIGNABLE_ROLES,
+  BRANCH_ROLES,
+  User,
+  UserRole,
+  UserService,
+  UserStatus,
+  UserUpdatePayload,
+} from './user.service';
+import { AuthService } from '../../auth/auth.service';
 import { Tenant, TenantService } from '../../services/tenants.service';
 import { Branch, BranchService } from '../../services/branches.service';
 
@@ -18,10 +27,11 @@ const STATUS_BADGES: Record<UserStatus, string> = {
 };
 
 const ROLE_LABELS: Record<UserRole, string> = {
-  sysadmin: 'Sysadmin',
-  owner: 'Owner',
-  admin: 'Admin',
+  sysadmin: 'Sistema',
+  owner: 'Propietario',
+  admin: 'Encargado',
   cashier: 'Cajero',
+  cook: 'Cocinero',
 };
 
 const ROLE_BADGES: Record<UserRole, string> = {
@@ -29,6 +39,7 @@ const ROLE_BADGES: Record<UserRole, string> = {
   owner: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200',
   admin: 'bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-200',
   cashier: 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-300',
+  cook: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200',
 };
 
 interface NewUserForm {
@@ -63,6 +74,7 @@ export class UsersComponent  implements OnInit {
   readonly #userService = inject(UserService);
   readonly #tenantService = inject(TenantService);
   readonly #branchService = inject(BranchService);
+  readonly #authService = inject(AuthService);
 
   readonly users = signal<User[]>([]);
   readonly total = signal(0);
@@ -76,10 +88,37 @@ export class UsersComponent  implements OnInit {
   page = 1;
   limit = 10;
   editing: User | null = null;
-  newUser: NewUserForm = { ...EMPTY_NEW_USER };
+  newUser: NewUserForm = { ...EMPTY_NEW_USER, role: this.creatableRoles[0] ?? 'cashier' };
   tenants: Tenant[] = [];
   branches: Branch[] = [];
-  creatableRoles = CREATABLE_ROLES;
+  get isSysadmin(): boolean {
+    return this.#authService.user()?.role === 'sysadmin';
+  }
+
+  /**
+   * Roles que el usuario actual puede asignar: owner → Encargado, Cajero, Cocinero;
+   * Encargado → Cajero, Cocinero. La API aplica la misma regla.
+   */
+  get creatableRoles(): UserRole[] {
+    const role = this.#authService.user()?.role;
+    return role ? ASSIGNABLE_ROLES[role] ?? [] : [];
+  }
+
+  isBranchRole(role: UserRole | undefined): boolean {
+    return role !== undefined && BRANCH_ROLES.includes(role);
+  }
+
+  /**
+   * A sysadmin target can only be re-assigned by a sysadmin, and nobody may change
+   * their own role (prevents a sysadmin from locking themselves out).
+   */
+  canEditRole(user: User): boolean {
+    if (user._id === this.#authService.user()?._id) {
+      return false;
+    }
+    // Solo se edita el rol de quien tiene un rol que uno mismo podría asignar.
+    return user.role === undefined || this.creatableRoles.includes(user.role);
+  }
 
   ngOnInit(): void {
     this.#load();
@@ -222,7 +261,7 @@ export class UsersComponent  implements OnInit {
   }
 
   startCreate(): void {
-    this.newUser = { ...EMPTY_NEW_USER };
+    this.newUser = { ...EMPTY_NEW_USER, role: this.creatableRoles[0] ?? 'cashier' };
     this.creating.set(true);
     this.error.set('');
     this.#loadBranches();
@@ -257,9 +296,9 @@ export class UsersComponent  implements OnInit {
         email,
         password,
         status,
-        role,
+        roles: [role],
         tenantId: tenantId || undefined,
-        branchId: role === 'cashier' ? branchId || undefined : undefined,
+        branchId: this.isBranchRole(role) ? branchId || undefined : undefined,
       })
       .subscribe({
         next: () => {
@@ -284,18 +323,19 @@ export class UsersComponent  implements OnInit {
 
     const { _id, firstName, lastName, email, status, role, tenantId, branchId } = this.editing;
 
-    const payload = { firstName, lastName, email, status };
+    const original = this.users().find((user) => user._id === _id);
+    const payload: UserUpdatePayload = { firstName, lastName, email, status };
 
-    if (role) {
-      (payload as { role?: UserRole }).role = role;
+    if (role && original && this.canEditRole(original)) {
+      payload.roles = [role];
     }
 
     if (tenantId) {
-      (payload as { tenantId?: string }).tenantId = tenantId;
+      payload.tenantId = tenantId;
     }
 
-    if (role === 'cashier') {
-      (payload as { branchId?: string }).branchId = branchId || undefined;
+    if (this.isBranchRole(role)) {
+      payload.branchId = branchId || undefined;
     }
 
     this.#userService.update(_id, payload).subscribe({

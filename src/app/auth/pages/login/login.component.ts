@@ -3,7 +3,7 @@ import { NgClass } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
-import { AuthService, authErrorMessage } from '../../auth.service';
+import { AuthService, authErrorMessage, canUseAdminPanel, POS_ONLY_MESSAGE } from '../../auth.service';
 
 @Component({
   selector: 'app-login',
@@ -42,7 +42,19 @@ export class LoginComponent {
 
     this.#authService.login(email, password).subscribe({
       next: (result) => {
-        this.#authService.setToken(result.token);
+        if (!canUseAdminPanel(result.user)) {
+          // Se revoca el token recién emitido: este rol no usa el panel admin.
+          this.#authService.setToken(result.token);
+          this.#authService.logout().subscribe({
+            complete: () => this.#authService.setToken(null),
+            error: () => this.#authService.setToken(null),
+          });
+          this.loading.set(false);
+          this.error.set(POS_ONLY_MESSAGE);
+          return;
+        }
+
+        this.#authService.startSession(result);
         void this.#router.navigate(['/dashboard']);
       },
       error: (err) => {

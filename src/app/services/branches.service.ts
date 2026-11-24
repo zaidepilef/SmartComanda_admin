@@ -18,6 +18,13 @@ export interface Branch {
   phone?: string;
   active: boolean;
   paymentMethods?: PaymentMethod[];
+  /** Ubicación exacta (null si no se ha definido). */
+  lat?: number | null;
+  lng?: number | null;
+  /** Límites de delivery: si se superan, el pedido se marca fuera de rango (solo aviso). */
+  deliveryMaxKm?: number | null;
+  deliveryMaxMinutes?: number | null;
+  deliveryAvgSpeedKmh?: number;
 }
 
 export interface BranchCreatePayload {
@@ -29,6 +36,13 @@ export interface BranchCreatePayload {
   phone?: string;
   active: boolean;
   paymentMethods?: PaymentMethod[];
+  /** Ubicación exacta (null si no se ha definido). */
+  lat?: number | null;
+  lng?: number | null;
+  /** Límites de delivery: si se superan, el pedido se marca fuera de rango (solo aviso). */
+  deliveryMaxKm?: number | null;
+  deliveryMaxMinutes?: number | null;
+  deliveryAvgSpeedKmh?: number;
 }
 
 export interface BranchUpdatePayload {
@@ -40,6 +54,13 @@ export interface BranchUpdatePayload {
   phone?: string;
   active?: boolean;
   paymentMethods?: PaymentMethod[];
+  /** Ubicación exacta (null si no se ha definido). */
+  lat?: number | null;
+  lng?: number | null;
+  /** Límites de delivery: si se superan, el pedido se marca fuera de rango (solo aviso). */
+  deliveryMaxKm?: number | null;
+  deliveryMaxMinutes?: number | null;
+  deliveryAvgSpeedKmh?: number;
 }
 
 @Injectable({ providedIn: 'root' })
