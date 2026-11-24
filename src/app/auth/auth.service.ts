@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 
@@ -75,6 +75,12 @@ export class AuthService {
     }
   }
 
+  /** Opens a session from a login response: stores the token and the user it returned. */
+  startSession(response: AuthResponse): void {
+    this.setToken(response.token);
+    this.#user.set(response.user);
+  }
+
   login(email: string, password: string): Observable<AuthResponse> {
     return this.#http.post<AuthResponse>(`${environment.apiUrl}/api/auth/login`, {
       email,
@@ -122,17 +128,23 @@ export class AuthService {
     this.#profileLoading = true;
 
     const promise = new Promise<AuthUser | null>((resolve) => {
-      this.me().subscribe({
-        next: (user) => {
-          this.#user.set(user);
-          resolve(user);
-        },
-        error: () => resolve(null),
-        complete: () => {
-          this.#profileLoading = false;
-          this.#profileLoadingPromise = null;
-        }
-      });
+      this.me()
+        .pipe(
+          // finalize runs on success AND on error. Resetting only on `complete` left the
+          // flags stuck after a failed /me (e.g. expired token), so the next login never
+          // fetched the profile until a full page reload.
+          finalize(() => {
+            this.#profileLoading = false;
+            this.#profileLoadingPromise = null;
+          })
+        )
+        .subscribe({
+          next: (user) => {
+            this.#user.set(user);
+            resolve(user);
+          },
+          error: () => resolve(null)
+        });
     });
 
     this.#profileLoadingPromise = promise;

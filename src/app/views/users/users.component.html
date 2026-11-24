@@ -83,7 +83,7 @@
                 <option value="inactive">Inactivo</option>
               </select>
             </div>
-            @if (editing.role !== 'sysadmin') {
+            @if (canEditRole(editing)) {
               <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" for="editRole">Rol</label>
                 <select

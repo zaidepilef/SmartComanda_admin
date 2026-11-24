@@ -41,7 +41,7 @@ export interface UserCreatePayload {
   password: string;
   status?: UserStatus;
   name?: string;
-  role?: UserRole;
+  roles?: UserRole[];
   tenantId?: string;
   branchId?: string;
 }
@@ -53,7 +53,7 @@ export interface UserUpdatePayload {
   status?: UserStatus;
   password?: string;
   name?: string;
-  role?: UserRole;
+  roles?: UserRole[];
   tenantId?: string;
   branchId?: string;
 }

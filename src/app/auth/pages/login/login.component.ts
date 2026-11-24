@@ -42,7 +42,7 @@ export class LoginComponent {
 
     this.#authService.login(email, password).subscribe({
       next: (result) => {
-        this.#authService.setToken(result.token);
+        this.#authService.startSession(result);
         void this.#router.navigate(['/dashboard']);
       },
       error: (err) => {

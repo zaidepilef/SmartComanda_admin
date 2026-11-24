@@ -1,7 +1,8 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { CREATABLE_ROLES, User, UserRole, UserService, UserStatus } from './user.service';
+import { CREATABLE_ROLES, User, UserRole, UserService, UserStatus, UserUpdatePayload } from './user.service';
+import { AuthService } from '../../auth/auth.service';
 import { Tenant, TenantService } from '../../services/tenants.service';
 import { Branch, BranchService } from '../../services/branches.service';
 
@@ -63,6 +64,7 @@ export class UsersComponent  implements OnInit {
   readonly #userService = inject(UserService);
   readonly #tenantService = inject(TenantService);
   readonly #branchService = inject(BranchService);
+  readonly #authService = inject(AuthService);
 
   readonly users = signal<User[]>([]);
   readonly total = signal(0);
@@ -79,7 +81,25 @@ export class UsersComponent  implements OnInit {
   newUser: NewUserForm = { ...EMPTY_NEW_USER };
   tenants: Tenant[] = [];
   branches: Branch[] = [];
-  creatableRoles = CREATABLE_ROLES;
+  get isSysadmin(): boolean {
+    return this.#authService.user()?.role === 'sysadmin';
+  }
+
+  /** Roles the current actor may assign; only a sysadmin can grant sysadmin (the API enforces it too). */
+  get creatableRoles(): UserRole[] {
+    return this.isSysadmin ? CREATABLE_ROLES : CREATABLE_ROLES.filter((role) => role !== 'sysadmin');
+  }
+
+  /**
+   * A sysadmin target can only be re-assigned by a sysadmin, and nobody may change
+   * their own role (prevents a sysadmin from locking themselves out).
+   */
+  canEditRole(user: User): boolean {
+    if (user._id === this.#authService.user()?._id) {
+      return false;
+    }
+    return user.role !== 'sysadmin' || this.isSysadmin;
+  }
 
   ngOnInit(): void {
     this.#load();
@@ -257,7 +277,7 @@ export class UsersComponent  implements OnInit {
         email,
         password,
         status,
-        role,
+        roles: [role],
         tenantId: tenantId || undefined,
         branchId: role === 'cashier' ? branchId || undefined : undefined,
       })
@@ -284,18 +304,19 @@ export class UsersComponent  implements OnInit {
 
     const { _id, firstName, lastName, email, status, role, tenantId, branchId } = this.editing;
 
-    const payload = { firstName, lastName, email, status };
+    const original = this.users().find((user) => user._id === _id);
+    const payload: UserUpdatePayload = { firstName, lastName, email, status };
 
-    if (role) {
-      (payload as { role?: UserRole }).role = role;
+    if (role && original && this.canEditRole(original)) {
+      payload.roles = [role];
     }
 
     if (tenantId) {
-      (payload as { tenantId?: string }).tenantId = tenantId;
+      payload.tenantId = tenantId;
     }
 
     if (role === 'cashier') {
-      (payload as { branchId?: string }).branchId = branchId || undefined;
+      payload.branchId = branchId || undefined;
     }
 
     this.#userService.update(_id, payload).subscribe({
