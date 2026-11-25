@@ -29,6 +29,11 @@ export const EVENT_LABELS: Record<JourneyEventType, string> = {
   order_submitted: 'Envió el pedido',
   order_created: 'Pedido creado',
   order_failed: 'Pedido fallido',
+  mode_selected: 'Eligió modalidad',
+  customer_looked_up: 'Ingresó su teléfono',
+  address_confirmed: 'Confirmó la dirección',
+  address_out_of_range: 'Dirección fuera de cobertura',
+  summary_opened: 'Abrió el resumen',
 };
 
 export const FAILURE_EVENTS = new Set<JourneyEventType>(['menu_failed', 'order_failed']);
@@ -87,6 +92,16 @@ export function describeEvent(event: JourneyEvent, dishNames: Map<string, string
     case 'menu_failed':
     case 'order_failed':
       return describeFailure(data);
+    case 'mode_selected':
+      return data['mode'] === 'delivery' ? 'Domicilio' : 'Retiro en el local';
+    case 'customer_looked_up':
+      return data['known'] ? 'Cliente conocido' : 'Cliente nuevo';
+    case 'address_confirmed':
+      return data['source'] === 'saved' ? 'Dirección guardada' : 'Dirección nueva';
+    case 'address_out_of_range':
+      return `A ${String(data['distanceKm']).replace('.', ',')} km del local`;
+    case 'summary_opened':
+      return `${plural(Number(data['itemCount']), 'ítem', 'ítems')} · ${formatMoney(data['total'])}`;
     default:
       return '';
   }
