@@ -6,21 +6,22 @@ import { environment } from '../../../environments/environment';
 
 export type UserStatus = 'active' | 'inactive' | 'pending';
 
-export type UserRole = 'sysadmin' | 'owner' | 'admin' | 'cashier' | 'cook';
+export type UserRole = 'sysadmin' | 'owner' | 'admin' | 'cashier' | 'cook' | 'driver';
 
-export const CREATABLE_ROLES: UserRole[] = ['sysadmin', 'owner', 'admin', 'cashier', 'cook'];
+export const CREATABLE_ROLES: UserRole[] = ['sysadmin', 'owner', 'admin', 'cashier', 'cook', 'driver'];
 
 /** Roles que cada rol puede asignar (la API aplica la misma regla). */
 export const ASSIGNABLE_ROLES: Record<UserRole, UserRole[]> = {
   sysadmin: CREATABLE_ROLES,
-  owner: ['admin', 'cashier', 'cook'],
-  admin: ['cashier', 'cook'],
+  owner: ['admin', 'cashier', 'cook', 'driver'],
+  admin: ['cashier', 'cook', 'driver'],
   cashier: [],
   cook: [],
+  driver: [],
 };
 
 /** Roles que operan en una sucursal concreta. */
-export const BRANCH_ROLES: UserRole[] = ['cashier', 'cook'];
+export const BRANCH_ROLES: UserRole[] = ['cashier', 'cook', 'driver'];
 
 export interface User {
   _id: string;

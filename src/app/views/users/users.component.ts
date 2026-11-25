@@ -32,6 +32,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   admin: 'Encargado',
   cashier: 'Cajero',
   cook: 'Cocinero',
+  driver: 'Repartidor',
 };
 
 const ROLE_BADGES: Record<UserRole, string> = {
@@ -40,6 +41,7 @@ const ROLE_BADGES: Record<UserRole, string> = {
   admin: 'bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-200',
   cashier: 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-300',
   cook: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200',
+  driver: 'bg-violet-100 text-violet-800 dark:bg-violet-900/50 dark:text-violet-200',
 };
 
 interface NewUserForm {
@@ -96,8 +98,8 @@ export class UsersComponent  implements OnInit {
   }
 
   /**
-   * Roles que el usuario actual puede asignar: owner → Encargado, Cajero, Cocinero;
-   * Encargado → Cajero, Cocinero. La API aplica la misma regla.
+   * Roles que el usuario actual puede asignar: owner → Encargado, Cajero, Cocinero, Repartidor;
+   * Encargado → Cajero, Cocinero, Repartidor. La API aplica la misma regla.
    */
   get creatableRoles(): UserRole[] {
     const role = this.#authService.user()?.role;

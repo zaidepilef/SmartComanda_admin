@@ -10,15 +10,19 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   new: 'Nuevo',
   preparing: 'En preparación',
   ready: 'Listo',
+  out_for_delivery: 'En reparto',
   delivered: 'Entregado',
-  cancelled: 'Cancelado',
+  rejected: 'Rechazado',
+  cancelled: 'Anulado',
 };
 
 const STATUS_BADGES: Record<OrderStatus, string> = {
   new: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200',
   preparing: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200',
   ready: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200',
+  out_for_delivery: 'bg-violet-100 text-violet-800 dark:bg-violet-900/50 dark:text-violet-200',
   delivered: 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-300',
+  rejected: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-200',
   cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200',
 };
 
@@ -39,7 +43,21 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
   pending: 'Pendiente',
   paid: 'Pagado',
-  refunded: 'Anulado (revertido)',
+  declined: 'Tarjeta rechazada',
+  voided: 'Anulado sin cobro',
+  refunded: 'Devuelto',
+};
+
+/** Notas internas del historial de pagos que la API guarda como código. */
+const PAYMENT_NOTE_LABELS: Record<string, string> = {
+  collected_on_delivery: 'cobrado en la entrega',
+};
+
+const EXPECTED_METHOD_LABELS: Record<string, string> = {
+  cash: 'Efectivo',
+  debit: 'Débito',
+  credit: 'Crédito',
+  card: 'Tarjeta (débito o crédito)',
 };
 
 @Component({
@@ -194,6 +212,21 @@ export class OrdersComponent implements OnInit {
 
   paymentMethodLabel(method: string | undefined): string {
     return method ? (PAYMENT_METHOD_LABELS[method] ?? method) : '—';
+  }
+
+  expectedMethodLabel(method: string | null | undefined): string {
+    return method ? (EXPECTED_METHOD_LABELS[method] ?? method) : '—';
+  }
+
+  /** Domicilio o retiro pedido desde la app del cliente (tiene datos del flujo de compra). */
+  hasAppPurchaseInfo(order: Order): boolean {
+    return Boolean(
+      order.expectedPaymentMethod || order.driverName || order.rejectionReason || order.paymentHistory?.length
+    );
+  }
+
+  paymentNoteLabel(note: string): string {
+    return PAYMENT_NOTE_LABELS[note] ?? note;
   }
 
   paymentStatusLabel(status: string | undefined): string {
