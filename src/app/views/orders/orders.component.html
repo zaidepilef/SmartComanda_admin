@@ -30,8 +30,10 @@
             <option value="new">Nuevo</option>
             <option value="preparing">En preparación</option>
             <option value="ready">Listo</option>
+            <option value="out_for_delivery">En reparto</option>
             <option value="delivered">Entregado</option>
-            <option value="cancelled">Cancelado</option>
+            <option value="rejected">Rechazado</option>
+            <option value="cancelled">Anulado</option>
           </select>
         </div>
         <div>
@@ -72,6 +74,9 @@
             <option value="">Todos</option>
             <option value="pending">Pendiente</option>
             <option value="paid">Pagado</option>
+            <option value="declined">Tarjeta rechazada</option>
+            <option value="voided">Anulado sin cobro</option>
+            <option value="refunded">Devuelto</option>
           </select>
         </div>
         <div>
@@ -167,6 +172,9 @@
                 </td>
                 <td class="px-4 py-3">
                   <span class="inline-flex rounded-full px-3 py-1 text-xs font-medium {{ statusBadge(order.status) }}">{{ statusLabel(order.status) }}</span>
+                  @if (order.driverName) {
+                    <div class="mt-1 text-xs text-gray-500 dark:text-slate-400">🛵 {{ order.driverName }}</div>
+                  }
                 </td>
                 <td class="px-4 py-3 text-gray-500 dark:text-slate-400">{{ formatDate(order.createdAt) }}</td>
               </tr>
@@ -198,13 +206,65 @@
                         </div>
                       </div>
                     }
+                    @if (order.status === 'rejected' && order.rejectionReason) {
+                      <div class="mb-4 rounded-lg border border-orange-200 bg-orange-50 p-3 text-sm text-orange-800 dark:border-orange-900 dark:bg-orange-950/40 dark:text-orange-200">
+                        <span class="font-semibold">Rechazado por el local:</span> {{ order.rejectionReason }}
+                        @if (order.rejectedAt) {
+                          <span class="text-xs opacity-80">· {{ formatDate(order.rejectedAt) }}</span>
+                        }
+                      </div>
+                    }
+                    @if (order.status === 'cancelled' && order.cancelReason) {
+                      <div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                        <span class="font-semibold">Motivo de anulación:</span> {{ order.cancelReason }}
+                      </div>
+                    }
+                    @if (hasAppPurchaseInfo(order)) {
+                      <div class="mb-4 grid grid-cols-1 gap-4 rounded-lg border border-gray-200 bg-white p-3 text-sm md:grid-cols-2 dark:border-slate-700 dark:bg-slate-900">
+                        <div class="space-y-1 text-gray-700 dark:text-slate-300">
+                          <h6 class="mb-1 text-sm font-semibold text-gray-900 dark:text-white">Pago</h6>
+                          <div>Medio esperado: <span class="font-medium">{{ expectedMethodLabel(order.expectedPaymentMethod) }}</span></div>
+                          @if (order.cashTendered) {
+                            <div>Paga con: <span class="font-medium">{{ formatMoney(order.cashTendered) }}</span></div>
+                          }
+                          <div>Estado de pago: <span class="font-medium">{{ paymentStatusLabel(order.paymentStatus) }}</span></div>
+                          @if (order.driverName) {
+                            <div>Repartidor: <span class="font-medium">{{ order.driverName }}</span></div>
+                          }
+                        </div>
+                        <div>
+                          <h6 class="mb-1 text-sm font-semibold text-gray-900 dark:text-white">Historial de pagos</h6>
+                          <ul class="space-y-1 text-gray-700 dark:text-slate-300">
+                            @for (entry of order.paymentHistory ?? []; track $index) {
+                              <li>
+                                {{ paymentStatusLabel(entry.status) }}
+                                @if (entry.method) {
+                                  · {{ paymentMethodLabel(entry.method) }}
+                                }
+                                @if (entry.note) {
+                                  <span class="text-xs text-gray-500 dark:text-slate-400">({{ paymentNoteLabel(entry.note) }})</span>
+                                }
+                                — <span class="text-gray-500 dark:text-slate-400">{{ formatDate(entry.at) }}</span>
+                              </li>
+                            } @empty {
+                              <li class="text-gray-500 dark:text-slate-400">Sin movimientos.</li>
+                            }
+                          </ul>
+                        </div>
+                      </div>
+                    }
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div>
                         <h6 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Detalle del pedido</h6>
                         <ul class="space-y-1 text-sm text-gray-700 dark:text-slate-300">
                           @for (item of order.items; track $index) {
                             <li class="flex justify-between gap-4">
-                              <span>{{ item.quantity }} × {{ item.name }}</span>
+                              <span>
+                                {{ item.quantity }} × {{ item.name }}
+                                @if (item.note) {
+                                  <span class="block text-xs text-gray-500 dark:text-slate-400">📝 {{ item.note }}</span>
+                                }
+                              </span>
                               <span class="font-medium">{{ formatMoney(item.price * item.quantity) }}</span>
                             </li>
                           }
