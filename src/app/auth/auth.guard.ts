@@ -13,7 +13,7 @@ export const authGuard: CanActivateFn = async () => {
 
   const user = await authService.loadProfileAndWait();
 
-  // Una sesión de Cajero o Cocinero (p. ej. un token guardado) no entra al panel.
+  // Una sesión de Cajero, Cocinero o Repartidor (p. ej. un token guardado) no entra al panel.
   if (user && !canUseAdminPanel(user)) {
     authService.setToken(null);
     return router.createUrlTree(['/login']);

@@ -5,9 +5,9 @@ import { finalize, Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 
-export type AuthRole = 'sysadmin' | 'owner' | 'admin' | 'cashier' | 'cook';
+export type AuthRole = 'sysadmin' | 'owner' | 'admin' | 'cashier' | 'cook' | 'driver';
 
-/** Roles que usan el panel admin. Cajero y Cocinero trabajan solo en el POS. */
+/** Roles que usan el panel admin. Cajero, Cocinero y Repartidor trabajan solo en el POS. */
 export const ADMIN_PANEL_ROLES: AuthRole[] = ['sysadmin', 'owner', 'admin'];
 
 export const POS_ONLY_MESSAGE = 'Tu rol trabaja en el POS. Ingresa desde la app POS.';

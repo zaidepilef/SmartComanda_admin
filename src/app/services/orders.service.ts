@@ -20,10 +20,28 @@ export interface OrderItem {
   note?: string;
 }
 
-export type OrderStatus = 'new' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+export type OrderStatus =
+  | 'new'
+  | 'preparing'
+  | 'ready'
+  | 'out_for_delivery'
+  | 'delivered'
+  | 'rejected'
+  | 'cancelled';
 export type OrderType = 'takeaway' | 'dinein' | 'delivery' | 'qr';
 export type PaymentMethod = 'cash' | 'debit' | 'credit' | 'transfer';
-export type PaymentStatus = 'pending' | 'paid';
+export type PaymentStatus = 'pending' | 'paid' | 'declined' | 'voided' | 'refunded';
+
+/** Medio que el cliente dijo que usaría en la app (`card` = débito o crédito). */
+export type ExpectedPaymentMethod = 'cash' | 'debit' | 'credit' | 'card';
+
+export interface PaymentHistoryEntry {
+  status: PaymentStatus;
+  method?: string | null;
+  at: string;
+  by?: string | null;
+  note?: string | null;
+}
 
 export interface Order extends DeliveryFields {
   _id: string;
@@ -44,6 +62,14 @@ export interface Order extends DeliveryFields {
   total: number;
   createdAt: string;
   statusHistory?: Array<{ status: string; at: string; by?: string }>;
+  /** Flujo de compra de la app (change customer-purchase-flow). */
+  expectedPaymentMethod?: ExpectedPaymentMethod | null;
+  cashTendered?: number | null;
+  driverName?: string | null;
+  rejectionReason?: string | null;
+  rejectedAt?: string | null;
+  cancelReason?: string | null;
+  paymentHistory?: PaymentHistoryEntry[];
 }
 
 export interface OrderListQuery {
