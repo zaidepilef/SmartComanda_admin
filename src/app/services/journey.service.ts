@@ -24,7 +24,12 @@ export type JourneyEventType =
   | 'cart_opened'
   | 'order_submitted'
   | 'order_created'
-  | 'order_failed';
+  | 'order_failed'
+  | 'mode_selected'
+  | 'customer_looked_up'
+  | 'address_confirmed'
+  | 'address_out_of_range'
+  | 'summary_opened';
 
 export interface JourneyFailure {
   status: number;
